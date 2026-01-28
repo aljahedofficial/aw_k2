@@ -3,1146 +3,1625 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Writing Defense Platform</title>
+    <title>Writing Defense Platform - L2 Writing Integrity Tool</title>
+    
+    <!-- External Libraries -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #f0f0f0;
+            --bg-tertiary: #e0e0e0;
+            --text-primary: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --accent-primary: #2563eb;
+            --accent-danger: #dc2626;
+            --accent-warning: #f59e0b;
+            --accent-success: #16a34a;
+            --border-color: #d1d5db;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --focus-ring: 2px solid #2563eb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0f0f0f;
+                --bg-secondary: #1a1a1a;
+                --bg-tertiary: #2a2a2a;
+                --text-primary: #f0f0f0;
+                --text-secondary: #a0a0a0;
+                --border-color: #404040;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5;
-            height: 100vh;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
             overflow: hidden;
         }
-        
+
         .app-container {
-            display: grid;
-            grid-template-columns: 280px 1fr 320px;
-            grid-template-rows: 60px 1fr;
+            display: flex;
+            flex-direction: column;
             height: 100vh;
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
         }
-        
-        /* Header */
-        .header {
-            grid-column: 1 / -1;
-            background: #1a1a2e;
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--accent-primary);
             color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        .app-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
             display: flex;
-            align-items: center;
-            padding: 0 24px;
             justify-content: space-between;
-            border-bottom: 3px solid #16213e;
-        }
-        
-        .logo {
-            display: flex;
             align-items: center;
-            gap: 12px;
+            flex-shrink: 0;
         }
-        
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: #e94560;
-            border-radius: 8px;
+
+        .app-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-1px);
+        }
+
+        .btn:focus-visible {
+            outline: var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .btn-danger {
+            background: var(--accent-danger);
+            color: white;
+            border-color: var(--accent-danger);
+        }
+
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        .editor-toolbar {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-btn {
+            padding: 0.25rem 0.75rem;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .toolbar-btn:hover, .toolbar-btn.active {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .editor-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .editor-content {
+            max-width: 800px;
+            margin: 0 auto;
+            min-height: 100%;
+            padding: 2rem;
+            background: white;
+            box-shadow: var(--shadow-md);
+            border-radius: 0.5rem;
+            font-size: 1.125rem;
+            line-height: 1.8;
+            color: #1a1a1a;
+        }
+
+        .editor-content:focus {
+            outline: none;
+        }
+
+        .shadow-overlay {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            display: flex;
+            flex-direction: column;
+            pointer-events: none;
+        }
+
+        .shadow-segment {
+            flex: 1;
+            min-height: 20px;
+            transition: background-color 0.3s;
+            position: relative;
+        }
+
+        .shadow-segment:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .shadow-safe { background: var(--accent-success); opacity: 0.3; }
+        .shadow-warning { background: var(--accent-warning); opacity: 0.6; }
+        .shadow-danger { background: var(--accent-danger); opacity: 0.8; }
+
+        .stumble-indicator {
+            position: absolute;
+            left: -24px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-warning);
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--accent-warning);
+            cursor: help;
+            animation: pulse 2s infinite;
+            z-index: 5;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .sources-panel {
+            width: 350px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-upload-zone {
+            padding: 1.5rem;
+            margin: 1rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-primary);
+        }
+
+        .file-upload-zone:hover, .file-upload-zone.drag-over {
+            border-color: var(--accent-primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .source-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1rem;
+        }
+
+        .source-item {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .source-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .source-item.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .source-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-danger);
+            color: white;
+            font-size: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 20px;
         }
-        
-        .status-badge {
-            background: #0f3460;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .status-badge.ready { background: #16c79a; color: #1a1a2e; }
-        .status-badge.pending { background: #f9a825; color: #1a1a2e; }
-        
-        /* Sidebars */
-        .sidebar-left, .sidebar-right {
-            background: #f8f9fa;
-            border-right: 1px solid #e0e0e0;
+
+        .source-preview {
+            height: 200px;
+            background: var(--bg-primary);
+            border-top: 2px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
             overflow-y: auto;
-            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin: 0 1rem 1rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        
-        .sidebar-right {
-            border-right: none;
-            border-left: 1px solid #e0e0e0;
+
+        @media (prefers-color-scheme: dark) {
+            .source-preview {
+                background: #1a1a1a;
+                border-color: #404040;
+                box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+                color: #f0f0f0;
+            }
+            .editor-content {
+                background: #1a1a1a;
+                color: #f0f0f0;
+            }
         }
-        
-        /* Main Content */
-        .main-content {
+
+        @media (prefers-color-scheme: light) {
+            .source-preview {
+                background: #ffffff;
+                border: 1px solid #d1d5db;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                color: #1a1a1a;
+            }
+        }
+
+        .similarity-warning {
+            background: rgba(245, 158, 11, 0.2);
+            border-left: 4px solid var(--accent-warning);
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border-radius: 0 0.375rem 0.375rem 0;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .similarity-warning {
+                background: rgba(245, 158, 11, 0.15);
+                color: #f0f0f0;
+            }
+        }
+
+        .metrics-panel {
+            width: 300px;
+            background: var(--bg-secondary);
             display: flex;
             flex-direction: column;
-            background: white;
-        }
-        
-        .toolbar {
-            padding: 12px 24px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            background: #fafafa;
-        }
-        
-        .toolbar button {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        
-        .toolbar button:hover {
-            background: #f0f0f0;
-            border-color: #999;
-        }
-        
-        .editor-container {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        #editor {
-            width: 100%;
-            height: 100%;
-            padding: 40px;
-            font-family: 'Georgia', serif;
-            font-size: 16px;
-            line-height: 1.8;
-            color: #333;
-            border: none;
-            outline: none;
-            resize: none;
             overflow-y: auto;
         }
-        
-        #editor:empty:before {
-            content: "Start writing here... Your Shadow scores will appear in real-time as you type.";
-            color: #999;
-            font-style: italic;
+
+        .metric-card {
+            background: var(--bg-primary);
+            margin: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
         }
-        
-        /* Cards */
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e0e0e0;
-        }
-        
-        .card h3 {
-            font-size: 13px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 12px;
+
+        .metric-title {
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
         }
-        
-        .metric {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .metric:last-child { border-bottom: none; }
-        
+
         .metric-value {
-            font-size: 20px;
+            font-size: 2rem;
             font-weight: 700;
-            color: #1a1a2e;
+            color: var(--text-primary);
+            line-height: 1;
         }
-        
-        .metric-value.warning { color: #e94560; }
-        .metric-value.success { color: #16c79a; }
-        .metric-value.caution { color: #f9a825; }
-        
+
+        .metric-subtext {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
         .progress-bar {
-            height: 6px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            margin-top: 8px;
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-top: 0.5rem;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
-            background: #e94560;
-            transition: width 0.3s;
-            border-radius: 3px;
+            transition: width 0.3s, background-color 0.3s;
         }
-        
-        .progress-fill.safe { background: #16c79a; }
-        .progress-fill.caution { background: #f9a825; }
-        
-        /* Shadow Chart */
-        .shadow-chart {
+
+        .chart-container {
+            height: 150px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
             display: flex;
-            align-items: flex-end;
-            height: 100px;
-            gap: 3px;
-            margin-top: 12px;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 1rem;
         }
-        
-        .shadow-bar {
-            flex: 1;
-            background: #e0e0e0;
-            border-radius: 2px 2px 0 0;
-            min-height: 5px;
-            transition: all 0.3s;
-            position: relative;
-        }
-        
-        .shadow-bar:hover {
-            opacity: 0.8;
-            cursor: pointer;
-        }
-        
-        .shadow-bar.high { background: #e94560; }
-        .shadow-bar.medium { background: #f9a825; }
-        .shadow-bar.low { background: #16c79a; }
-        
-        .shadow-bar.current {
-            box-shadow: 0 0 0 2px #1a1a2e;
-            z-index: 10;
-        }
-        
-        /* Burstiness EKG */
-        .ekg-container {
-            height: 80px;
-            background: #fafafa;
-            border-radius: 4px;
-            position: relative;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-        
-        #ekgCanvas {
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: 0.75rem;
+            max-width: 700px;
             width: 100%;
-            height: 100%;
-        }
-        
-        /* Stumbles */
-        .stumble-list {
-            max-height: 150px;
+            max-height: 90vh;
             overflow-y: auto;
-            font-size: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        
-        .stumble-item {
-            padding: 8px;
-            background: #fff3cd;
-            border-left: 3px solid #f9a825;
-            margin-bottom: 6px;
-            border-radius: 0 4px 4px 0;
-            color: #856404;
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-        /* Upload Area */
-        .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .consent-option {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             cursor: pointer;
             transition: all 0.2s;
-            margin-top: 12px;
         }
-        
-        .upload-area:hover {
-            border-color: #e94560;
-            background: #fff5f5;
+
+        .consent-option:hover {
+            border-color: var(--accent-primary);
+            background: rgba(37, 99, 235, 0.05);
         }
-        
-        .upload-area input {
+
+        .consent-option.selected {
+            border-color: var(--accent-primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        /* Baseline Modal Specific Styles */
+        .baseline-options {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .baseline-option-card {
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: var(--bg-primary);
+        }
+
+        .baseline-option-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .baseline-option-card.selected {
+            border-color: var(--accent-primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .baseline-option-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .baseline-option-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .baseline-option-title {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .baseline-option-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .baseline-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 0.9375rem;
+            resize: vertical;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin-top: 0.5rem;
+        }
+
+        .baseline-textarea:focus {
+            outline: var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        .word-count {
+            text-align: right;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .word-count.valid {
+            color: var(--accent-success);
+            font-weight: 500;
+        }
+
+        .file-input-hidden {
             display: none;
         }
-        
-        /* Alerts */
-        .alerts-container {
-            position: fixed;
-            top: 80px;
-            right: 24px;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+
+        .upload-button {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
         }
-        
+
+        .upload-button:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
         .alert {
-            padding: 12px 20px;
-            background: white;
-            border-left: 4px solid #e94560;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-radius: 0 8px 8px 0;
-            font-size: 13px;
-            max-width: 300px;
-            animation: slideIn 0.3s ease;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-primary);
+            border-left: 4px solid var(--accent-warning);
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            z-index: 40;
+            animation: slideIn 0.3s ease-out;
+            color: var(--text-primary);
         }
-        
-        .alert.warning { border-left-color: #f9a825; }
-        .alert.success { border-left-color: #16c79a; }
-        .alert.info { border-left-color: #3b82f6; }
-        
+
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 500px;
-            border-radius: 12px;
-            padding: 32px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .modal h2 {
-            margin-bottom: 16px;
-            color: #1a1a2e;
-        }
-        
-        .modal p, .modal li {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-        
-        .modal ul {
-            margin-left: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .btn-primary {
-            width: 100%;
-            padding: 12px;
-            background: #e94560;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
+
+        .alert-header {
             font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .btn-primary:hover {
-            background: #d63d56;
-        }
-        
-        textarea.baseline-input {
-            width: 100%;
-            height: 150px;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-            margin: 16px 0;
-            resize: vertical;
-        }
-        
-        .source-tag {
-            display: inline-flex;
+            margin-bottom: 0.25rem;
+            display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: #e3f2fd;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-right: 6px;
-            margin-bottom: 6px;
+            gap: 0.5rem;
         }
-        
-        .source-tag button {
+
+        .alert-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
             background: none;
             border: none;
-            color: #666;
             cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
+            padding: 0.25rem;
+            color: var(--text-secondary);
         }
-        
-        .hidden { display: none !important; }
-        
-        /* Responsive */
+
         @media (max-width: 1200px) {
-            .app-container {
-                grid-template-columns: 240px 1fr 280px;
+            .sources-panel { width: 300px; }
+            .metrics-panel { width: 250px; }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout { flex-direction: column; }
+            .sources-panel, .metrics-panel { 
+                width: 100%; 
+                height: 300px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .baseline-options {
+                grid-template-columns: 1fr;
             }
         }
-        
-        @media (max-width: 900px) {
-            .app-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: 60px auto 1fr auto;
-            }
-            .sidebar-left, .sidebar-right {
-                display: none;
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+
+        @media (prefers-contrast: high) {
+            :root {
+                --border-color: #000000;
+                --text-primary: #000000;
+                --bg-primary: #ffffff;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Onboarding Modal -->
-    <div id="onboardingModal" class="modal active">
-        <div class="modal-content">
-            <h2>🎯 Writing Defense Platform</h2>
-            <p>Phase 1 MVP - Research Grade Tool</p>
-            <ul>
-                <li><strong>Shadow System:</strong> Real-time AI detector emulation</li>
-                <li><strong>Burstiness EKG:</strong> Visualize sentence variance</li>
-                <li><strong>Stumble Detection:</strong> Track authentic writing pauses</li>
-                <li><strong>Source Analysis:</strong> OCR + similarity detection</li>
-                <li><strong>Baseline Calibration:</strong> Learn your authentic voice</li>
-            </ul>
-            <p style="font-size: 12px; color: #999; margin-top: 20px;">
-                ⚠️ All data stays local in your browser. No server uploads.
-            </p>
-            <button class="btn-primary" onclick="closeOnboarding()">Get Started</button>
-        </div>
-    </div>
+    <div id="root"></div>
 
-    <!-- Baseline Modal -->
-    <div id="baselineModal" class="modal">
-        <div class="modal-content">
-            <h2>Baseline Calibration</h2>
-            <p>Paste 1-3 samples of your previous writing (2000+ words recommended for 95% confidence).</p>
-            <textarea id="baselineInput" class="baseline-input" placeholder="Paste your writing samples here to create your linguistic fingerprint..."></textarea>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <span id="wordCount" style="font-size: 13px; color: #666;">0 words</span>
-                <button class="btn-primary" style="width: auto; padding: 8px 24px;" onclick="createBaseline()">Create Baseline</button>
-            </div>
-            <p style="font-size: 11px; color: #999;">Your baseline helps detect voice drift and ensures authentic writing patterns.</p>
-        </div>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
 
-    <!-- Main App -->
-    <div class="app-container">
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">W</div>
-                <div>
-                    <div style="font-weight: 700;">Writing Defense</div>
-                    <div style="font-size: 11px; opacity: 0.8;">Phase 1 MVP</div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 16px; align-items: center;">
-                <div id="baselineStatus" class="status-badge pending" onclick="showBaselineModal()">
-                    ⚠️ No Baseline Set
-                </div>
-                <button onclick="exportCSV()" style="background: #16213e; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">
-                    Export CSV
-                </button>
-            </div>
-        </header>
-
-        <aside class="sidebar-left">
-            <div class="card">
-                <h3>Baseline Profile</h3>
-                <div id="baselineMetrics">
-                    <p style="font-size: 13px; color: #666; font-style: italic;">
-                        No baseline calibrated. Click "No Baseline Set" above to start.
-                    </p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Source Files</h3>
-                <div id="sourceList" style="margin-bottom: 12px;">
-                    <p style="font-size: 12px; color: #999;">No sources loaded</p>
-                </div>
-                <label class="upload-area">
-                    <input type="file" id="fileInput" accept=".txt,.pdf" onchange="handleFileUpload(event)">
-                    <div style="font-size: 24px; margin-bottom: 8px;">📄</div>
-                    <div style="font-size: 13px; color: #666;">Drop PDF or TXT</div>
-                    <div style="font-size: 11px; color: #999; margin-top: 4px;">Supports OCR for scanned PDFs</div>
-                </label>
-                <div id="ocrStatus" style="margin-top: 8px; font-size: 11px; color: #666; display: none;">
-                    Processing OCR...
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Session Recovery</h3>
-                <p style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                    Auto-saving every 30 seconds to browser storage.
-                </p>
-                <button onclick="loadAutoSave()" style="width: 100%; padding: 8px; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                    Restore Previous Session
-                </button>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <div class="toolbar">
-                <button onclick="formatText('bold')" title="Bold"><b>B</b></button>
-                <button onclick="formatText('italic')" title="Italic"><i>I</i></button>
-                <div style="width: 1px; height: 20px; background: #ddd; margin: 0 8px;"></div>
-                <span id="docStats" style="font-size: 13px; color: #666;">0 words • 0 sentences</span>
-            </div>
-            
-            <div class="editor-container">
-                <div id="editor" contenteditable="true" oninput="handleInput(event)" onkeydown="handleKeyDown(event)" onpaste="handlePaste(event)"></div>
-            </div>
-        </main>
-
-        <aside class="sidebar-right">
-            <div class="card">
-                <h3 style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 8px; height: 8px; background: #e94560; border-radius: 50%;"></span>
-                    Shadow System
-                    <span style="margin-left: auto; font-size: 11px; color: #999; font-weight: normal;">AI Detection Risk</span>
-                </h3>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-size: 12px; color: #666;">Current Risk</span>
-                    <span id="currentRisk" class="metric-value success">0%</span>
-                </div>
-                
-                <div class="progress-bar">
-                    <div id="riskBar" class="progress-fill safe" style="width: 0%"></div>
-                </div>
-                
-                <div class="shadow-chart" id="shadowChart">
-                    <!-- Bars generated by JS -->
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; color: #999;">
-                    <span>Safe</span>
-                    <span>Caution</span>
-                    <span>High Risk</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
-                    Burstiness EKG
-                </h3>
-                <div class="ekg-container">
-                    <canvas id="ekgCanvas"></canvas>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #666;">
-                    <span>Low variance</span>
-                    <span style="font-weight: 600;" id="burstinessValue">0.00</span>
-                    <span>High variance</span>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 style="display: flex; align-items: center; gap: 8px;">
-                    <span style="width: 8px; height: 8px; background: #f9a825; border-radius: 50%;"></span>
-                    Stumble System
-                </h3>
-                <div class="stumble-list" id="stumbleList">
-                    <p style="font-style: italic; color: #999;">Start typing to detect cognitive pauses...</p>
-                </div>
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0;">
-                    <div class="metric" style="padding: 0;">
-                        <span style="font-size: 12px; color: #666;">Pauses detected</span>
-                        <span id="pauseCount" class="metric-value" style="font-size: 16px;">0</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Real-time Metrics</h3>
-                <div class="metric">
-                    <span style="font-size: 13px; color: #555;">Lexical Diversity</span>
-                    <span id="diversityValue" class="metric-value" style="font-size: 16px;">0.00</span>
-                </div>
-                <div class="metric">
-                    <span style="font-size: 13px; color: #555;">Avg Sentence Length</span>
-                    <span id="avgLengthValue" class="metric-value" style="font-size: 16px;">0</span>
-                </div>
-                <div class="metric">
-                    <span style="font-size: 13px; color: #555;">Source Matches</span>
-                    <span id="sourceMatches" class="metric-value" style="font-size: 16px;">0</span>
-                </div>
-            </div>
-        </aside>
-    </div>
-
-    <!-- Alerts Container -->
-    <div class="alerts-container" id="alerts"></div>
-
-    <script>
-        // ==================== STATE ====================
-        let baseline = null;
-        let sources = [];
-        let keystrokes = [];
-        let lastKeystrokeTime = Date.now();
-        let stumbles = [];
-        let sessionData = {
-            text: '',
-            sentences: [],
-            metrics: []
-        };
-        let autoSaveInterval;
-
-        // ==================== INITIALIZATION ====================
-        window.onload = function() {
-            loadFromStorage();
-            initEKG();
-            startAutoSave();
-            
-            // Focus editor
-            setTimeout(() => {
-                document.getElementById('editor').focus();
-            }, 100);
-        };
-
-        // ==================== UI FUNCTIONS ====================
-        function closeOnboarding() {
-            document.getElementById('onboardingModal').classList.remove('active');
-            if (!baseline) {
-                showBaselineModal();
-            }
-        }
-
-        function showBaselineModal() {
-            document.getElementById('baselineModal').classList.add('active');
-        }
-
-        function closeBaselineModal() {
-            document.getElementById('baselineModal').classList.remove('active');
-        }
-
-        function showAlert(message, type = 'info') {
-            const container = document.getElementById('alerts');
-            const alert = document.createElement('div');
-            alert.className = `alert ${type}`;
-            alert.textContent = message;
-            container.appendChild(alert);
-            
-            setTimeout(() => {
-                alert.style.opacity = '0';
-                alert.style.transform = 'translateX(100%)';
-                setTimeout(() => alert.remove(), 300);
-            }, 4000);
-        }
-
-        // ==================== BASELINE ====================
-        function createBaseline() {
-            const text = document.getElementById('baselineInput').value;
-            const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-            
-            if (wordCount < 200) {
-                alert('Please provide at least 200 words for accurate calibration.');
-                return;
-            }
-
-            const sentences = tokenizeSentences(text);
-            const wordLengths = sentences.map(s => s.split(' ').length);
-            
-            baseline = {
-                wordCount: wordCount,
-                sentenceCount: sentences.length,
-                avgSentenceLength: wordLengths.reduce((a,b) => a+b, 0) / sentences.length,
-                burstiness: calculateSD(wordLengths),
-                lexicalDiversity: calculateDiversity(text),
-                confidence: Math.min(100, (wordCount / 2000) * 100),
-                createdAt: new Date().toISOString(),
-                patterns: extractPatterns(text)
-            };
-
-            saveToStorage();
-            closeBaselineModal();
-            updateBaselineUI();
-            showAlert('Baseline calibrated successfully!', 'success');
-        }
-
-        function updateBaselineUI() {
-            const status = document.getElementById('baselineStatus');
-            const metrics = document.getElementById('baselineMetrics');
-            
-            if (baseline) {
-                status.textContent = `✓ Baseline ${baseline.confidence.toFixed(0)}%`;
-                status.className = 'status-badge ready';
-                status.onclick = showBaselineModal;
-                
-                metrics.innerHTML = `
-                    <div class="metric">
-                        <span style="font-size: 12px; color: #666;">Words Analyzed</span>
-                        <span style="font-weight: 600;">${baseline.wordCount}</span>
-                    </div>
-                    <div class="metric">
-                        <span style="font-size: 12px; color: #666;">Confidence</span>
-                        <span style="font-weight: 600; color: ${baseline.confidence > 80 ? '#16c79a' : '#f9a825'}">${baseline.confidence.toFixed(0)}%</span>
-                    </div>
-                    <div class="metric">
-                        <span style="font-size: 12px; color: #666;">Avg Burstiness</span>
-                        <span style="font-weight: 600;">${baseline.burstiness.toFixed(2)}</span>
-                    </div>
-                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0;">
-                        <button onclick="showBaselineModal()" style="width: 100%; padding: 6px; background: #f0f0f0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
-                            Recalibrate
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        // ==================== EDITOR ====================
-        function handleInput(e) {
-            const text = e.target.innerText || '';
-            sessionData.text = text;
-            
-            const sentences = tokenizeSentences(text);
-            sessionData.sentences = sentences;
-            
-            // Update stats
-            const words = text.split(/\s+/).filter(w => w.length > 0).length;
-            document.getElementById('docStats').textContent = `${words} words • ${sentences.length} sentences`;
-            
-            // Calculate metrics
-            const burstiness = calculateBurstiness(sentences);
-            const diversity = calculateDiversity(text);
-            
-            // Update UI
-            document.getElementById('burstinessValue').textContent = burstiness.toFixed(2);
-            document.getElementById('diversityValue').textContent = diversity.toFixed(2);
-            
-            const avgLen = sentences.length ? (words / sentences.length).toFixed(1) : 0;
-            document.getElementById('avgLengthValue').textContent = avgLen;
-            
-            // Draw EKG
-            drawEKG(sentences);
-            
-            // Update Shadow
-            updateShadow(sentences);
-            
-            // Check source similarity
-            checkSourceSimilarity(text);
-            
-            // Check voice drift
-            if (baseline && sentences.length > 0) {
-                const currentBurst = calculateBurstiness(sentences.slice(-3));
-                if (Math.abs(currentBurst - baseline.burstiness) > 3) {
-                    if (Math.random() > 0.7) showAlert('Voice drift detected: Style differs from baseline', 'warning');
-                }
-            }
-        }
-
-        function handleKeyDown(e) {
-            const now = Date.now();
-            const interval = now - lastKeystrokeTime;
-            
-            // Detect paste
-            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-                showAlert('Paste detected - excluded from stumble analysis', 'info');
-                return;
-            }
-            
-            // Detect stumble (pause > 1.5 seconds, not first keystroke)
-            if (interval > 1500 && sessionData.text.length > 10) {
-                const stumble = {
-                    time: now,
-                    duration: interval,
-                    position: sessionData.text.length,
-                    sentence: sessionData.sentences.length
-                };
-                stumbles.push(stumble);
-                updateStumbleUI();
-                
-                if (stumbles.length % 3 === 0) {
-                    showAlert('Cognitive pause detected - indicates authentic writing', 'success');
-                }
-            }
-            
-            keystrokes.push({
-                time: now,
-                key: e.key,
-                interval: interval
-            });
-            
-            lastKeystrokeTime = now;
-        }
-
-        function handlePaste(e) {
-            setTimeout(() => {
-                handleInput({target: document.getElementById('editor')});
-            }, 0);
-        }
-
-        function formatText(command) {
-            document.execCommand(command, false, null);
-            document.getElementById('editor').focus();
-        }
-
-        // ==================== SHADOW SYSTEM ====================
-        function updateShadow(sentences) {
-            const chart = document.getElementById('shadowChart');
-            chart.innerHTML = '';
-            
-            if (sentences.length === 0) return;
-            
-            let totalRisk = 0;
-            
-            sentences.slice(-20).forEach((sentence, idx) => {
-                const risk = calculateShadowScore(sentence);
-                totalRisk += risk;
-                
-                const bar = document.createElement('div');
-                bar.className = 'shadow-bar';
-                
-                if (risk > 0.7) bar.classList.add('high');
-                else if (risk > 0.4) bar.classList.add('medium');
-                else bar.classList.add('low');
-                
-                if (idx === sentences.slice(-20).length - 1) bar.classList.add('current');
-                
-                bar.style.height = `${Math.max(10, risk * 100)}%`;
-                bar.title = `Sentence ${idx + 1}: ${(risk * 100).toFixed(0)}% risk`;
-                
-                chart.appendChild(bar);
-            });
-            
-            const avgRisk = totalRisk / sentences.length;
-            const riskPercent = (avgRisk * 100).toFixed(0);
-            const riskEl = document.getElementById('currentRisk');
-            const riskBar = document.getElementById('riskBar');
-            
-            riskEl.textContent = riskPercent + '%';
-            riskBar.style.width = riskPercent + '%';
-            
-            if (avgRisk > 0.7) {
-                riskEl.className = 'metric-value warning';
-                riskBar.className = 'progress-fill';
-            } else if (avgRisk > 0.4) {
-                riskEl.className = 'metric-value caution';
-                riskBar.className = 'progress-fill caution';
-            } else {
-                riskEl.className = 'metric-value success';
-                riskBar.className = 'progress-fill safe';
-            }
-        }
-
-        function calculateShadowScore(sentence) {
-            const words = sentence.split(' ').filter(w => w.length > 0);
-            if (words.length === 0) return 0.3;
-            
-            const avgLength = words.reduce((a, w) => a + w.length, 0) / words.length;
-            const hasFormal = /\b(however|moreover|furthermore|consequently|therefore|thus)\b/i.test(sentence);
-            const isUniform = Math.abs(words.length - 15) < 3; // Close to average
-            
-            let score = 0.3;
-            if (avgLength > 5.5) score += 0.15;
-            if (hasFormal) score += 0.1;
-            if (isUniform) score += 0.1;
-            if (words.length > 20) score += 0.1;
-            
-            // Add some noise for realism
-            score += (Math.random() - 0.5) * 0.1;
-            
-            return Math.max(0, Math.min(1, score));
-        }
-
-        // ==================== STUMBLE SYSTEM ====================
-        function updateStumbleUI() {
-            const list = document.getElementById('stumbleList');
-            const count = document.getElementById('pauseCount');
-            
-            count.textContent = stumbles.length;
-            
-            if (stumbles.length === 0) return;
-            
-            list.innerHTML = '';
-            stumbles.slice(-5).reverse().forEach(stumble => {
-                const div = document.createElement('div');
-                div.className = 'stumble-item';
-                div.innerHTML = `
-                    <strong>${(stumble.duration / 1000).toFixed(1)}s pause</strong><br>
-                    <span style="font-size: 11px; opacity: 0.8;">Sentence ${stumble.sentence}</span>
-                `;
-                list.appendChild(div);
-            });
-        }
-
-        // ==================== EKG ====================
-        function initEKG() {
-            const canvas = document.getElementById('ekgCanvas');
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-        }
-
-        function drawEKG(sentences) {
-            const canvas = document.getElementById('ekgCanvas');
-            const ctx = canvas.getContext('2d');
-            const width = canvas.width;
-            const height = canvas.height;
-            
-            ctx.clearRect(0, 0, width, height);
-            
-            if (sentences.length < 2) return;
-            
-            const lengths = sentences.map(s => s.split(' ').length);
-            const max = Math.max(...lengths);
-            const min = Math.min(...lengths);
-            const range = max - min || 1;
-            
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2;
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            
-            const stepX = width / (lengths.length - 1);
-            
-            lengths.forEach((len, i) => {
-                const x = i * stepX;
-                const y = height - ((len - min) / range * (height - 10)) - 5;
-                
-                if (i === 0) ctx.moveTo(x, y);
-                else {
-                    const prevX = (i - 1) * stepX;
-                    const prevY = height - ((lengths[i-1] - min) / range * (height - 10)) - 5;
-                    const cpX = (prevX + x) / 2;
-                    ctx.quadraticCurveTo(cpX, prevY, x, y);
-                }
-                
-                // Draw point
-                ctx.fillStyle = len > (max + min) / 2 ? '#f9a825' : '#16c79a';
-                ctx.fillRect(x - 2, y - 2, 4, 4);
-            });
-            
-            ctx.stroke();
-        }
-
-        // ==================== FILE UPLOAD ====================
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const status = document.getElementById('ocrStatus');
-            status.style.display = 'block';
-            status.textContent = 'Processing...';
-            
-            if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-                // Simulate OCR processing
-                setTimeout(() => {
-                    status.textContent = 'OCR Complete (simulated)';
-                    const source = {
-                        id: Date.now(),
-                        name: file.name,
-                        text: "Extracted text from PDF would appear here. In a full implementation, this would use Tesseract.js for OCR or pdf-lib for text extraction.",
-                        type: 'pdf'
-                    };
-                    sources.push(source);
-                    updateSourceUI();
-                    showAlert('PDF processed (OCR simulation)', 'success');
-                }, 1500);
-            } else {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const source = {
-                        id: Date.now(),
-                        name: file.name,
-                        text: e.target.result,
-                        type: 'txt'
-                    };
-                    sources.push(source);
-                    updateSourceUI();
-                    status.style.display = 'none';
-                    showAlert('Text file loaded successfully', 'success');
-                };
-                reader.readAsText(file);
-            }
-        }
-
-        function updateSourceUI() {
-            const list = document.getElementById('sourceList');
-            
-            if (sources.length === 0) {
-                list.innerHTML = '<p style="font-size: 12px; color: #999;">No sources loaded</p>';
-                return;
-            }
-            
-            list.innerHTML = sources.map(s => `
-                <div class="source-tag">
-                    ${s.name}
-                    <button onclick="removeSource(${s.id})">×</button>
-                </div>
-            `).join('');
-        }
-
-        function removeSource(id) {
-            sources = sources.filter(s => s.id !== id);
-            updateSourceUI();
-        }
-
-        function checkSourceSimilarity(text) {
-            let matches = 0;
-            const textLower = text.toLowerCase();
-            
-            sources.forEach(source => {
-                const sourceSentences = tokenizeSentences(source.text);
-                sourceSentences.forEach(sent => {
-                    if (sent.length > 20 && textLower.includes(sent.toLowerCase().slice(0, 30))) {
-                        matches++;
-                    }
-                });
-            });
-            
-            document.getElementById('sourceMatches').textContent = matches;
-            
-            if (matches > 0 && matches % 3 === 0) {
-                showAlert(`High similarity to source material detected (${matches} matches)`, 'warning');
-            }
-        }
-
-        // ==================== EXPORT ====================
-        function exportCSV() {
-            const rows = [
-                ['timestamp', 'sentence', 'burstiness', 'shadow_risk', 'stumble_count'].join(','),
-                ...sessionData.sentences.map((sent, i) => [
-                    new Date().toISOString(),
-                    `"${sent.replace(/"/g, '""')}"`,
-                    calculateBurstiness([sent]),
-                    calculateShadowScore(sent),
-                    stumbles.filter(s => s.sentence === i).length
-                ].join(','))
-            ].join('\n');
-            
-            downloadFile(rows, 'text/csv', `writing_defense_${new Date().toISOString().split('T')[0]}.csv`);
-            showAlert('CSV exported successfully', 'success');
-        }
-
-        function downloadFile(content, type, filename) {
-            const blob = new Blob([content], { type });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // ==================== STORAGE ====================
-        function startAutoSave() {
-            autoSaveInterval = setInterval(() => {
-                if (sessionData.text.length > 0) {
-                    localStorage.setItem('writingDefense_autosave', JSON.stringify({
-                        html: document.getElementById('editor').innerHTML,
-                        text: sessionData.text,
-                        timestamp: Date.now(),
-                        stumbles: stumbles,
-                        keystrokes: keystrokes.length
-                    }));
-                }
-            }, 30000);
-        }
-
-        function loadAutoSave() {
-            const saved = localStorage.getItem('writingDefense_autosave');
-            if (saved) {
-                const data = JSON.parse(saved);
-                if (confirm(`Restore session from ${new Date(data.timestamp).toLocaleTimeString()}?`)) {
-                    document.getElementById('editor').innerHTML = data.html;
-                    sessionData.text = data.text;
-                    stumbles = data.stumbles || [];
-                    handleInput({target: document.getElementById('editor')});
-                    updateStumbleUI();
-                    showAlert('Session restored', 'success');
-                }
-            } else {
-                showAlert('No previous session found', 'info');
-            }
-        }
-
-        function saveToStorage() {
-            localStorage.setItem('writingDefense_baseline', JSON.stringify(baseline));
-            localStorage.setItem('writingDefense_sources', JSON.stringify(sources));
-        }
-
-        function loadFromStorage() {
-            const savedBaseline = localStorage.getItem('writingDefense_baseline');
-            const savedSources = localStorage.getItem('writingDefense_sources');
-            
-            if (savedBaseline) {
-                baseline = JSON.parse(savedBaseline);
-                updateBaselineUI();
-            }
-            
-            if (savedSources) {
-                sources = JSON.parse(savedSources);
-                updateSourceUI();
-            }
-        }
-
-        // ==================== MATH UTILS ====================
-        function tokenizeSentences(text) {
+        // Utility Functions
+        const sentenceTokenizer = (text) => {
             return text.replace(/([.!?])\s+/g, "$1|").split("|").filter(s => s.trim().length > 0);
-        }
+        };
 
-        function calculateBurstiness(sentences) {
-            if (sentences.length < 2) return 0;
-            const lengths = sentences.map(s => s.split(' ').length);
-            return calculateSD(lengths);
-        }
-
-        function calculateSD(values) {
-            if (values.length === 0) return 0;
-            const mean = values.reduce((a,b) => a+b, 0) / values.length;
-            const variance = values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / values.length;
-            return Math.sqrt(variance);
-        }
-
-        function calculateDiversity(text) {
-            const words = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
-            if (words.length === 0) return 0;
-            const unique = new Set(words);
-            return unique.size / words.length;
-        }
-
-        function extractPatterns(text) {
-            // Simplified pattern extraction
-            return {
-                avgWordLength: text.length / (text.split(' ').length || 1),
-                punctuationDensity: (text.match(/[.!?,:;]/g) || []).length / text.length
-            };
-        }
-
-        // Handle window resize for EKG
-        window.addEventListener('resize', () => {
-            initEKG();
-            if (sessionData.sentences.length > 0) {
-                drawEKG(sessionData.sentences);
+        const calculateBurstiness = (sentences) => {
+            if (sentences.length < 2) return { global: 0, local: [] };
+            const lengths = sentences.map(s => s.split(/\s+/).length);
+            const mean = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+            const variance = lengths.reduce((acc, len) => acc + Math.pow(len - mean, 2), 0) / lengths.length;
+            const sd = Math.sqrt(variance);
+            const burstiness = sd / mean;
+            
+            const local = [];
+            for (let i = 0; i < lengths.length - 4; i++) {
+                const window = lengths.slice(i, i + 5);
+                const wMean = window.reduce((a,b) => a+b,0) / 5;
+                const wVar = window.reduce((acc, len) => acc + Math.pow(len - wMean, 2), 0) / 5;
+                local.push(Math.sqrt(wVar));
             }
-        });
+            
+            return { global: burstiness, local, mean, sd };
+        };
+
+        const calculateTTR = (text) => {
+            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+            if (words.length === 0) return { raw: 0, mattr: 0 };
+            
+            const unique = new Set(words).size;
+            const raw = unique / words.length;
+            
+            let mattrSum = 0;
+            let count = 0;
+            for (let i = 0; i <= words.length - 50; i++) {
+                const window = words.slice(i, i + 50);
+                const windowUnique = new Set(window).size;
+                mattrSum += windowUnique / 50;
+                count++;
+            }
+            
+            return { 
+                raw, 
+                mattr: count > 0 ? mattrSum / count : raw,
+                wordCount: words.length,
+                uniqueCount: unique
+            };
+        };
+
+        const calculatePerplexity = (text) => {
+            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+            if (words.length < 2) return 100;
+            
+            const commonWords = new Set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at']);
+            let rareCount = 0;
+            words.forEach(word => {
+                if (!commonWords.has(word) && word.length > 6) rareCount++;
+            });
+            
+            return Math.min(200, 80 + (rareCount / words.length) * 200);
+        };
+
+        const cosineSimilarity = (vecA, vecB) => {
+            let dot = 0, normA = 0, normB = 0;
+            for (let i = 0; i < vecA.length; i++) {
+                dot += vecA[i] * vecB[i];
+                normA += vecA[i] * vecA[i];
+                normB += vecB[i] * vecB[i];
+            }
+            return dot / (Math.sqrt(normA) * Math.sqrt(normB) || 1);
+        };
+
+        const textToVector = (text, vocab) => {
+            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+            const vec = new Array(vocab.length).fill(0);
+            words.forEach(word => {
+                const idx = vocab.indexOf(word);
+                if (idx !== -1) vec[idx]++;
+            });
+            return vec;
+        };
+
+        const ConsentModal = ({ onComplete }) => {
+            const [consents, setConsents] = useState({
+                metrics: true,
+                keystrokes: false,
+                fullText: false,
+                email: false
+            });
+
+            const handleSubmit = () => {
+                localStorage.setItem('wdp_consent', JSON.stringify({
+                    ...consents,
+                    timestamp: new Date().toISOString(),
+                    version: '1.0'
+                }));
+                onComplete();
+            };
+
+            return (
+                <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 id="consent-title">Research Consent & Data Privacy</h2>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{marginBottom: '1rem', color: 'var(--text-secondary)'}}>
+                                This tool collects data for research on L2 writing and AI detection bias. 
+                                Your privacy is protected. You may use all features regardless of consent choices.
+                            </p>
+
+                            <div 
+                                className={`consent-option ${consents.metrics ? 'selected' : ''}`}
+                                onClick={() => setConsents(c => ({...c, metrics: !c.metrics}))}
+                                role="checkbox" 
+                                aria-checked={consents.metrics}
+                            >
+                                <div style={{fontWeight: 600, marginBottom: '0.25rem'}}>
+                                    ☑️ Anonymized Metrics
+                                </div>
+                                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                    Collect burstiness, TTR, and detector scores (cannot identify you)
+                                </div>
+                            </div>
+
+                            <div 
+                                className={`consent-option ${consents.keystrokes ? 'selected' : ''}`}
+                                onClick={() => setConsents(c => ({...c, keystrokes: !c.keystrokes}))}
+                                role="checkbox" 
+                                aria-checked={consents.keystrokes}
+                            >
+                                <div style={{fontWeight: 600, marginBottom: '0.25rem'}}>
+                                    ⌨️ Keystroke Dynamics (The Stumble)
+                                </div>
+                                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                    Track typing patterns and pauses to detect cognitive effort
+                                </div>
+                            </div>
+
+                            <div 
+                                className={`consent-option ${consents.fullText ? 'selected' : ''}`}
+                                onClick={() => setConsents(c => ({...c, fullText: !c.fullText}))}
+                                role="checkbox" 
+                                aria-checked={consents.fullText}
+                            >
+                                <div style={{fontWeight: 600, marginBottom: '0.25rem'}}>
+                                    📝 Full Text Export
+                                </div>
+                                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                    Allow session text to be included in research corpus
+                                </div>
+                            </div>
+
+                            <div style={{marginTop: '1.5rem', padding: '1rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '0.5rem', fontSize: '0.875rem'}}>
+                                <strong>Your Rights:</strong> You may withdraw consent anytime in Settings. 
+                                Data is stored locally by default. No data is sold to third parties.
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-primary" onClick={handleSubmit}>
+                                Continue to App
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // NEW BaselineModal with 3 distinct options
+        const BaselineModal = ({ onComplete }) => {
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [text, setText] = useState('');
+            const [uploadedFile, setUploadedFile] = useState(null);
+            const [analyzing, setAnalyzing] = useState(false);
+            const [fileContent, setFileContent] = useState('');
+            
+            const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+            const hasEnoughWords = wordCount >= 100;
+
+            const handleTextAnalyze = async () => {
+                if (!hasEnoughWords) return;
+                setAnalyzing(true);
+                await analyzeBaseline(text);
+            };
+
+            const handleFileSelect = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                setUploadedFile(file);
+                setAnalyzing(true);
+                
+                try {
+                    let extractedText = '';
+                    if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                        extractedText = await file.text();
+                    } else if (file.name.endsWith('.docx')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const result = await mammoth.extractRawText({arrayBuffer});
+                        extractedText = result.value;
+                    } else if (file.name.endsWith('.pdf')) {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            extractedText += content.items.map(item => item.str).join(' ') + ' ';
+                        }
+                    }
+                    
+                    setFileContent(extractedText);
+                    await analyzeBaseline(extractedText);
+                } catch (err) {
+                    console.error('Error parsing file:', err);
+                    alert('Error reading file. Please try a different format.');
+                    setAnalyzing(false);
+                }
+            };
+
+            const analyzeBaseline = async (content) => {
+                const sentences = sentenceTokenizer(content);
+                const burstiness = calculateBurstiness(sentences);
+                const ttr = calculateTTR(content);
+                
+                const profile = {
+                    created: new Date().toISOString(),
+                    sampleLength: content.length,
+                    wordCount: content.split(/\s+/).filter(w => w).length,
+                    sentenceLength: {
+                        mean: burstiness.mean,
+                        sd: burstiness.sd,
+                        normalRange: [Math.max(5, burstiness.mean - burstiness.sd), burstiness.mean + burstiness.sd]
+                    },
+                    burstinessBaseline: burstiness.global,
+                    lexicalDiversity: {
+                        mattr: ttr.mattr,
+                        normalRange: [Math.max(0.3, ttr.mattr * 0.8), Math.min(0.9, ttr.mattr * 1.2)]
+                    },
+                    vocabulary: [...new Set(content.toLowerCase().match(/\b\w+\b/g) || [])].slice(0, 100)
+                };
+                
+                localStorage.setItem('wdp_baseline', JSON.stringify(profile));
+                setTimeout(() => {
+                    setAnalyzing(false);
+                    onComplete();
+                }, 800);
+            };
+
+            const handleSkip = () => {
+                // Create generic L2 baseline
+                const genericProfile = {
+                    created: new Date().toISOString(),
+                    type: 'generic_l2',
+                    sentenceLength: {
+                        mean: 15,
+                        sd: 5,
+                        normalRange: [10, 20]
+                    },
+                    burstinessBaseline: 0.35,
+                    lexicalDiversity: {
+                        mattr: 0.55,
+                        normalRange: [0.45, 0.65]
+                    }
+                };
+                localStorage.setItem('wdp_baseline', JSON.stringify(genericProfile));
+                onComplete();
+            };
+
+            return (
+                <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baseline-title">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h2 id="baseline-title">Establish Your Baseline Profile</h2>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{color: 'var(--text-secondary)', marginBottom: '0.5rem'}}>
+                                To accurately detect when your writing deviates from your authentic voice, we need to establish your personal baseline.
+                            </p>
+                            <p style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                Choose one of the three options below:
+                            </p>
+
+                            <div className="baseline-options">
+                                {/* Option 1: Paste/Write Text */}
+                                <div 
+                                    className={`baseline-option-card ${selectedOption === 'text' ? 'selected' : ''}`}
+                                    onClick={() => setSelectedOption('text')}
+                                >
+                                    <div className="baseline-option-icon">✏️</div>
+                                    <div className="baseline-option-title">Paste or Write Sample</div>
+                                    <div className="baseline-option-desc">
+                                        Paste existing essays or write a new sample (minimum 100 words)
+                                    </div>
+                                    
+                                    {selectedOption === 'text' && (
+                                        <div style={{marginTop: '1rem'}}>
+                                            <textarea 
+                                                className="baseline-textarea"
+                                                value={text}
+                                                onChange={(e) => setText(e.target.value)}
+                                                placeholder="Paste or type your writing sample here..."
+                                                aria-label="Writing sample text"
+                                            />
+                                            <div className={`word-count ${hasEnoughWords ? 'valid' : ''}`}>
+                                                {wordCount} / 100 words {hasEnoughWords ? '✓' : 'minimum'}
+                                            </div>
+                                            <button 
+                                                className="btn btn-primary" 
+                                                style={{width: '100%', marginTop: '0.75rem'}}
+                                                onClick={handleTextAnalyze}
+                                                disabled={!hasEnoughWords || analyzing}
+                                            >
+                                                {analyzing ? 'Analyzing...' : 'Analyze & Create Profile'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Option 2: Upload File */}
+                                <div 
+                                    className={`baseline-option-card ${selectedOption === 'file' ? 'selected' : ''}`}
+                                    onClick={() => setSelectedOption('file')}
+                                >
+                                    <div className="baseline-option-icon">📄</div>
+                                    <div className="baseline-option-title">Upload Your Sample</div>
+                                    <div className="baseline-option-desc">
+                                        Upload a document (DOCX, PDF, TXT, or MD)
+                                    </div>
+                                    
+                                    {selectedOption === 'file' && (
+                                        <div style={{marginTop: '1rem'}}>
+                                            <input 
+                                                type="file" 
+                                                id="baseline-file"
+                                                className="file-input-hidden"
+                                                accept=".docx,.pdf,.txt,.md"
+                                                onChange={handleFileSelect}
+                                            />
+                                            <label 
+                                                htmlFor="baseline-file" 
+                                                className="upload-button"
+                                                style={{display: 'block', textAlign: 'center'}}
+                                            >
+                                                {uploadedFile ? `Selected: ${uploadedFile.name}` : 'Click to select file'}
+                                            </label>
+                                            {uploadedFile && !analyzing && (
+                                                <button 
+                                                    className="btn btn-primary" 
+                                                    style={{width: '100%', marginTop: '0.75rem'}}
+                                                    onClick={() => analyzeBaseline(fileContent)}
+                                                >
+                                                    Analyze Uploaded File
+                                                </button>
+                                            )}
+                                            {analyzing && (
+                                                <div style={{textAlign: 'center', marginTop: '0.75rem', color: 'var(--text-secondary)'}}>
+                                                    Processing file...
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Option 3: Skip */}
+                                <div 
+                                    className="baseline-option-card"
+                                    onClick={handleSkip}
+                                    style={{borderStyle: 'dashed'}}
+                                >
+                                    <div className="baseline-option-icon">⏭️</div>
+                                    <div className="baseline-option-title">Skip for Later</div>
+                                    <div className="baseline-option-desc">
+                                        Use generic L2 baseline for now. You can calibrate your personal baseline later in Settings.
+                                    </div>
+                                    <button 
+                                        className="btn btn-secondary" 
+                                        style={{width: '100%', marginTop: '0.75rem'}}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSkip();
+                                        }}
+                                    >
+                                        Continue with Generic Baseline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ShadowPanel = ({ sentences }) => {
+            return (
+                <div className="shadow-overlay" aria-label="Detector risk visualization">
+                    {sentences.map((sent, idx) => {
+                        const lengths = sentences.map(s => s.split(/\s+/).length);
+                        const mean = lengths.reduce((a,b) => a+b,0) / lengths.length;
+                        const variance = lengths.reduce((acc, len) => acc + Math.pow(len - mean, 2), 0) / lengths.length;
+                        const burst = Math.sqrt(variance) / mean;
+                        
+                        let risk = 0.2;
+                        if (burst < 0.3) risk = 0.8;
+                        else if (burst < 0.5) risk = 0.5;
+                        
+                        let className = 'shadow-segment shadow-safe';
+                        let label = 'Safe';
+                        if (risk > 0.67) {
+                            className = 'shadow-segment shadow-danger';
+                            label = 'High Risk';
+                        } else if (risk > 0.33) {
+                            className = 'shadow-segment shadow-warning';
+                            label = 'Moderate';
+                        }
+                        
+                        return (
+                            <div 
+                                key={idx} 
+                                className={className} 
+                                data-tooltip={`${label} (${(risk * 100).toFixed(0)}%)`}
+                                role="img" 
+                                aria-label={`Sentence ${idx + 1}: ${label}`}
+                            />
+                        );
+                    })}
+                </div>
+            );
+        };
+
+        const Alert = ({ message, type, onClose }) => {
+            if (!message) return null;
+            const colors = {
+                warning: '#f59e0b',
+                danger: '#dc2626',
+                info: '#2563eb'
+            };
+            
+            return (
+                <div className="alert" role="alert" style={{borderLeftColor: colors[type] || colors.info}}>
+                    <button className="alert-close" onClick={onClose} aria-label="Dismiss alert">×</button>
+                    <div className="alert-header" style={{color: colors[type] || colors.info}}>
+                        {type === 'warning' && '⚠️'}
+                        {type === 'danger' && '🛑'}
+                        {type === 'info' && 'ℹ️'}
+                        Alert
+                    </div>
+                    <div>{message}</div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [showConsent, setShowConsent] = useState(false);
+            const [showBaseline, setShowBaseline] = useState(false);
+            const [text, setText] = useState('');
+            const [sources, setSources] = useState([]);
+            const [activeSource, setActiveSource] = useState(null);
+            const [metrics, setMetrics] = useState({
+                humanityScore: 85,
+                burstiness: 0.45,
+                ttr: 0.62,
+                perplexity: 105
+            });
+            const [sentences, setSentences] = useState([]);
+            const [stumbles, setStumbles] = useState([]);
+            const [alerts, setAlerts] = useState([]);
+            const [baseline, setBaseline] = useState(null);
+            const [similarities, setSimilarities] = useState([]);
+            const [dragOver, setDragOver] = useState(false);
+            const editorRef = useRef(null);
+            const lastKeystrokeTime = useRef(Date.now());
+            const keystrokeBuffer = useRef([]);
+
+            useEffect(() => {
+                const savedConsent = localStorage.getItem('wdp_consent');
+                const savedBaseline = localStorage.getItem('wdp_baseline');
+                
+                if (!savedConsent) setShowConsent(true);
+                else if (!savedBaseline) setShowBaseline(true);
+                else setBaseline(JSON.parse(savedBaseline));
+            }, []);
+
+            useEffect(() => {
+                if (!text) return;
+                
+                const sents = sentenceTokenizer(text);
+                setSentences(sents);
+                
+                const burst = calculateBurstiness(sents);
+                const ttr = calculateTTR(text);
+                const perp = calculatePerplexity(text);
+                
+                let score = 100;
+                if (burst.global < 0.3) score -= 20;
+                if (ttr.mattr > 0.8) score -= 15;
+                if (perp < 80) score -= 25;
+                
+                setMetrics({
+                    humanityScore: Math.max(0, score),
+                    burstiness: burst.global,
+                    ttr: ttr.mattr,
+                    perplexity: perp
+                });
+
+                if (sources.length > 0) {
+                    const newSims = [];
+                    sources.forEach(source => {
+                        const sourceVec = textToVector(source.text, source.vocab);
+                        sents.forEach((sent, idx) => {
+                            const sentVec = textToVector(sent, source.vocab);
+                            const sim = cosineSimilarity(sentVec, sourceVec);
+                            if (sim > 0.3) {
+                                newSims.push({
+                                    sentenceIdx: idx,
+                                    sourceId: source.id,
+                                    score: sim
+                                });
+                            }
+                        });
+                    });
+                    setSimilarities(newSims);
+                }
+            }, [text, sources]);
+
+            const handleKeyDown = useCallback((e) => {
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                
+                const now = Date.now();
+                const interval = now - lastKeystrokeTime.current;
+                lastKeystrokeTime.current = now;
+                
+                if (e.key.length === 1) {
+                    keystrokeBuffer.current.push({
+                        time: now,
+                        interval,
+                        char: e.key
+                    });
+                    
+                    if (keystrokeBuffer.current.length > 100) {
+                        keystrokeBuffer.current.shift();
+                    }
+                    
+                    if (keystrokeBuffer.current.length > 10) {
+                        const recent = keystrokeBuffer.current.slice(-10);
+                        const avgInterval = recent.reduce((a,b) => a + b.interval, 0) / 10;
+                        
+                        if (interval > avgInterval * 2 && interval > 500) {
+                            const sentIdx = sentenceTokenizer(text).length - 1;
+                            setStumbles(prev => [...prev, {
+                                sentenceIdx: sentIdx,
+                                position: text.length,
+                                duration: interval,
+                                timestamp: now
+                            }]);
+                            
+                            setTimeout(() => {
+                                setAlerts(prev => [...prev, {
+                                    id: Date.now(),
+                                    message: `You paused here (${(interval/1000).toFixed(1)}s). Detectors may flag this smooth passage as "too robotic". Consider varying sentence structure.`,
+                                    type: 'warning'
+                                }]);
+                            }, 100);
+                        }
+                    }
+                }
+            }, [text]);
+
+            const handleFileUpload = async (files) => {
+                for (const file of files) {
+                    let extractedText = '';
+                    
+                    try {
+                        if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                            extractedText = await file.text();
+                        } else if (file.name.endsWith('.docx')) {
+                            const arrayBuffer = await file.arrayBuffer();
+                            const result = await mammoth.extractRawText({arrayBuffer});
+                            extractedText = result.value;
+                        } else if (file.name.endsWith('.pdf')) {
+                            const arrayBuffer = await file.arrayBuffer();
+                            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                            for (let i = 1; i <= pdf.numPages; i++) {
+                                const page = await pdf.getPage(i);
+                                const content = await page.getTextContent();
+                                extractedText += content.items.map(item => item.str).join(' ') + ' ';
+                            }
+                        }
+                        
+                        const words = extractedText.toLowerCase().match(/\b\w+\b/g) || [];
+                        const vocab = [...new Set(words)].slice(0, 1000);
+                        
+                        const newSource = {
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            text: extractedText.slice(0, 50000),
+                            vocab,
+                            sentenceCount: sentenceTokenizer(extractedText).length
+                        };
+                        
+                        setSources(prev => [...prev, newSource]);
+                    } catch (err) {
+                        console.error('Error parsing file:', err);
+                        setAlerts(prev => [...prev, {
+                            id: Date.now(),
+                            message: `Error reading ${file.name}. Please try another format.`,
+                            type: 'danger'
+                        }]);
+                    }
+                }
+            };
+
+            const onDrop = (e) => {
+                e.preventDefault();
+                setDragOver(false);
+                handleFileUpload(Array.from(e.dataTransfer.files));
+            };
+
+            const exportData = () => {
+                const data = {
+                    timestamp: new Date().toISOString(),
+                    text,
+                    metrics,
+                    keystrokes: keystrokeBuffer.current,
+                    stumbles,
+                    sources: sources.map(s => ({id: s.id, name: s.name})),
+                    baseline
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `writing-session-${Date.now()}.json`;
+                a.click();
+            };
+
+            const removeAlert = (id) => {
+                setAlerts(prev => prev.filter(a => a.id !== id));
+            };
+
+            if (showConsent) return <ConsentModal onComplete={() => { setShowConsent(false); setShowBaseline(true); }} />;
+            if (showBaseline) return <BaselineModal onComplete={() => setShowBaseline(false)} />;
+
+            return (
+                <div className="app-container">
+                    <a href="#main-content" className="skip-link">Skip to main content</a>
+                    
+                    <header className="app-header">
+                        <div className="app-title">Writing Defense Platform</div>
+                        <div className="header-controls">
+                            <button className="btn" onClick={exportData} aria-label="Export session data">
+                                💾 Export
+                            </button>
+                            <button className="btn" onClick={() => setShowBaseline(true)} aria-label="Settings">
+                                ⚙️ Settings
+                            </button>
+                            <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
+                                Humanity: 
+                                <span style={{ 
+                                    marginLeft: '0.5rem', 
+                                    fontWeight: 'bold',
+                                    color: metrics.humanityScore > 70 ? 'var(--accent-success)' : 
+                                           metrics.humanityScore > 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'
+                                }}>
+                                    {metrics.humanityScore}
+                                </span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div className="main-layout" id="main-content">
+                        <aside className="sources-panel" aria-label="Source files">
+                            <div className="panel-header">
+                                <span>Source Files</span>
+                                <span style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
+                                    {sources.length} files
+                                </span>
+                            </div>
+                            
+                            <div 
+                                className={`file-upload-zone ${dragOver ? 'drag-over' : ''}`}
+                                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                                onDragLeave={() => setDragOver(false)}
+                                onDrop={onDrop}
+                                onClick={() => document.getElementById('file-input').click()}
+                                role="button"
+                                tabIndex="0"
+                                aria-label="Upload files"
+                            >
+                                <div style={{fontSize: '2rem', marginBottom: '0.5rem'}}>📄</div>
+                                <div style={{fontWeight: 500}}>Drop files here or click to upload</div>
+                                <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem'}}>
+                                    DOCX, PDF, TXT, MD
+                                </div>
+                                <input 
+                                    id="file-input" 
+                                    type="file" 
+                                    multiple 
+                                    accept=".docx,.pdf,.txt,.md" 
+                                    style={{display: 'none'}} 
+                                    onChange={(e) => handleFileUpload(Array.from(e.target.files))}
+                                    aria-hidden="true"
+                                />
+                            </div>
+
+                            <div className="source-list" role="list">
+                                {sources.map(source => (
+                                    <div 
+                                        key={source.id}
+                                        className={`source-item ${activeSource?.id === source.id ? 'active' : ''}`}
+                                        onClick={() => setActiveSource(source)}
+                                        role="listitem"
+                                        tabIndex="0"
+                                        aria-label={`${source.name}, ${source.sentenceCount} sentences`}
+                                    >
+                                        <div style={{fontWeight: 500, color: 'var(--text-primary)'}}>{source.name}</div>
+                                        <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
+                                            {source.sentenceCount} sentences
+                                        </div>
+                                        {similarities.some(s => s.sourceId === source.id) && (
+                                            <span className="source-badge" aria-label="Similarity detected">
+                                                {similarities.filter(s => s.sourceId === source.id).length}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {activeSource ? (
+                                <div className="source-preview" role="region" aria-label="Source preview">
+                                    <div style={{
+                                        fontWeight: 600, 
+                                        marginBottom: '0.5rem', 
+                                        borderBottom: '1px solid var(--border-color)', 
+                                        paddingBottom: '0.5rem',
+                                        color: 'var(--text-primary)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <span>Preview: {activeSource.name}</span>
+                                        <span style={{fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-secondary)'}}>
+                                            {activeSource.text.length.toLocaleString()} chars
+                                        </span>
+                                    </div>
+                                    <div style={{
+                                        whiteSpace: 'pre-wrap', 
+                                        color: 'var(--text-primary)',
+                                        background: 'transparent'
+                                    }}>
+                                        {activeSource.text.slice(0, 1000)}
+                                        {activeSource.text.length > 1000 && (
+                                            <span style={{color: 'var(--text-secondary)', fontStyle: 'italic'}}>
+                                                {'\n\n... (truncated)'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="source-preview" style={{
+                                    display: 'flex', 
+                                    flexDirection: 'column',
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    color: 'var(--text-secondary)',
+                                    background: 'var(--bg-tertiary)',
+                                    textAlign: 'center',
+                                    gap: '0.5rem'
+                                }}>
+                                    <div style={{fontSize: '2rem', opacity: '0.3'}}>👁️</div>
+                                    <div style={{fontWeight: 500}}>Select a file to preview</div>
+                                    <div style={{fontSize: '0.75rem', maxWidth: '80%'}}>
+                                        Uploaded sources appear here for comparison
+                                    </div>
+                                </div>
+                            )}
+                        </aside>
+
+                        <main className="editor-panel" role="main">
+                            <div className="editor-toolbar" role="toolbar" aria-label="Formatting">
+                                <button className="toolbar-btn" onClick={() => document.execCommand('bold')} aria-label="Bold"><strong>B</strong></button>
+                                <button className="toolbar-btn" onClick={() => document.execCommand('italic')} aria-label="Italic"><em>I</em></button>
+                                <button className="toolbar-btn" onClick={() => document.execCommand('underline')} aria-label="Underline"><u>U</u></button>
+                            </div>
+                            
+                            <div className="editor-container">
+                                <ShadowPanel sentences={sentences} />
+                                
+                                {stumbles.map((stumble, idx) => (
+                                    <div 
+                                        key={idx}
+                                        className="stumble-indicator"
+                                        style={{top: `${(stumble.sentenceIdx * 40) + 100}px`}}
+                                        title={`Pause: ${(stumble.duration/1000).toFixed(1)}s`}
+                                        aria-label={`Stumble at sentence ${stumble.sentenceIdx + 1}`}
+                                    />
+                                ))}
+
+                                {similarities.map((sim, idx) => (
+                                    <div 
+                                        key={`sim-${idx}`}
+                                        className="similarity-warning"
+                                        style={{
+                                            position: 'absolute',
+                                            top: `${(sim.sentenceIdx * 40) + 150}px`,
+                                            left: '2rem',
+                                            right: '2rem',
+                                            zIndex: 10
+                                        }}
+                                        role="alert"
+                                    >
+                                        <strong>⚠️ Similarity Detected:</strong> {(sim.score * 100).toFixed(0)}% match with {sources.find(s => s.id === sim.sourceId)?.name}
+                                    </div>
+                                ))}
+
+                                <div 
+                                    ref={editorRef}
+                                    className="editor-content"
+                                    contentEditable
+                                    onInput={(e) => setText(e.currentTarget.innerText)}
+                                    onKeyDown={handleKeyDown}
+                                    role="textbox"
+                                    aria-multiline="true"
+                                    aria-label="Text editor"
+                                    suppressContentEditableWarning={true}
+                                >
+                                    <p>Start writing your essay here...</p>
+                                </div>
+                            </div>
+                        </main>
+
+                        <aside className="metrics-panel" aria-label="Writing metrics">
+                            <div className="panel-header">Analysis</div>
+                            
+                            <div className="metric-card">
+                                <div className="metric-title">Humanity Score</div>
+                                <div className="metric-value" style={{
+                                    color: metrics.humanityScore > 70 ? 'var(--accent-success)' : 
+                                           metrics.humanityScore > 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'
+                                }}>
+                                    {metrics.humanityScore}
+                                </div>
+                                <div className="progress-bar">
+                                    <div 
+                                        className="progress-fill" 
+                                        style={{
+                                            width: `${metrics.humanityScore}%`,
+                                            backgroundColor: metrics.humanityScore > 70 ? 'var(--accent-success)' : 
+                                                           metrics.humanityScore > 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'
+                                        }}
+                                    />
+                                </div>
+                                <div className="metric-subtext">
+                                    {metrics.humanityScore > 70 ? 'Likely human writing' : 
+                                     metrics.humanityScore > 40 ? 'Mixed signals - review' : 'High AI similarity risk'}
+                                </div>
+                            </div>
+
+                            <div className="metric-card">
+                                <div className="metric-title">Burstiness</div>
+                                <div className="metric-value" style={{fontSize: '1.5rem'}}>
+                                    {metrics.burstiness.toFixed(2)}
+                                </div>
+                                <div className="metric-subtext">
+                                    Sentence variance
+                                    {metrics.burstiness < 0.3 && (
+                                        <span style={{color: 'var(--accent-warning)', display: 'block', marginTop: '0.5rem'}}>
+                                            ⚠️ Low variance: Add varied sentence lengths
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="metric-card">
+                                <div className="metric-title">Lexical Diversity</div>
+                                <div className="metric-value" style={{fontSize: '1.5rem'}}>
+                                    {metrics.ttr.toFixed(2)}
+                                </div>
+                                <div className="metric-subtext">
+                                    MATTR (50-word windows)
+                                </div>
+                            </div>
+
+                            <div className="metric-card">
+                                <div className="metric-title">Perplexity</div>
+                                <div className="metric-value" style={{fontSize: '1.5rem'}}>
+                                    {metrics.perplexity.toFixed(0)}
+                                </div>
+                                <div className="metric-subtext">
+                                    Predictability score
+                                </div>
+                            </div>
+
+                            <div className="metric-card" style={{fontSize: '0.875rem'}}>
+                                <div className="metric-title">Session Stats</div>
+                                <div style={{marginBottom: '0.25rem'}}>Sentences: {sentences.length}</div>
+                                <div style={{marginBottom: '0.25rem'}}>Words: {text.split(/\s+/).filter(w => w).length}</div>
+                                <div style={{marginBottom: '0.25rem'}}>Stumbles: {stumbles.length}</div>
+                                <div>Sources: {sources.length}</div>
+                            </div>
+                        </aside>
+                    </div>
+
+                    {alerts.map(alert => (
+                        <Alert 
+                            key={alert.id} 
+                            message={alert.message} 
+                            type={alert.type} 
+                            onClose={() => removeAlert(alert.id)}
+                        />
+                    ))}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
