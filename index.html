@@ -4,19 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Writing Defense Platform</title>
-    
-    <!-- Load React and dependencies -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #f5f5f5; 
-            height: 100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
             overflow: hidden;
         }
         
@@ -35,10 +29,7 @@
         }
         
         @media (max-width: 900px) {
-            .app-container { 
-                grid-template-columns: 1fr; 
-                grid-template-rows: 60px auto 1fr auto; 
-            }
+            .app-container { grid-template-columns: 1fr; grid-template-rows: 60px auto 1fr auto; }
             .sidebar { display: none; }
         }
 
@@ -79,8 +70,6 @@
             font-size: 12px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
-            color: white;
         }
         
         .status-badge.ready { background: #16c79a; color: #1a1a2e; }
@@ -93,10 +82,7 @@
             padding: 20px;
         }
         
-        .sidebar-right {
-            border-right: none;
-            border-left: 1px solid #e0e0e0;
-        }
+        .sidebar-right { border-right: none; border-left: 1px solid #e0e0e0; }
         
         .main-content {
             display: flex;
@@ -121,13 +107,9 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 13px;
-            font-family: inherit;
         }
         
-        .toolbar button:hover {
-            background: #f0f0f0;
-            border-color: #999;
-        }
+        .toolbar button:hover { background: #f0f0f0; }
         
         .editor-wrapper {
             flex: 1;
@@ -147,21 +129,6 @@
             outline: none;
             resize: none;
             overflow-y: auto;
-            background: white;
-        }
-        
-        .editor-content:focus { outline: none; }
-        
-        .editor-placeholder {
-            position: absolute;
-            top: 40px;
-            left: 40px;
-            color: #999;
-            font-style: italic;
-            pointer-events: none;
-            font-family: 'Georgia', serif;
-            font-size: 16px;
-            line-height: 1.8;
         }
 
         .card {
@@ -191,18 +158,12 @@
             font-size: 13px;
         }
         
-        .metric:last-child { border-bottom: none; }
-        
         .metric-value {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a1a2e;
         }
-        
-        .metric-value.warning { color: #e94560; }
-        .metric-value.success { color: #16c79a; }
 
-        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -240,12 +201,9 @@
             margin: 8px 0 0;
             color: #666;
             font-size: 14px;
-            line-height: 1.4;
         }
         
-        .modal-body {
-            padding: 24px;
-        }
+        .modal-body { padding: 24px; }
         
         .baseline-options {
             display: flex;
@@ -309,10 +267,7 @@
             outline: none;
         }
         
-        .textarea-baseline:focus {
-            border-color: #e94560;
-            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
-        }
+        .textarea-baseline:focus { border-color: #e94560; }
 
         .word-count {
             text-align: right;
@@ -352,20 +307,16 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            font-family: inherit;
+            width: 100%;
+            margin-top: 12px;
         }
         
         .btn-primary {
             background: #e94560;
             color: white;
-            width: 100%;
-            margin-top: 12px;
         }
         
-        .btn-primary:hover:not(:disabled) {
-            background: #d63d56;
-            transform: translateY(-1px);
-        }
+        .btn-primary:hover:not(:disabled) { background: #d63d56; }
         
         .btn-primary:disabled {
             background: #ccc;
@@ -376,13 +327,9 @@
         .btn-secondary {
             background: #f0f0f0;
             color: #555;
-            width: 100%;
-            margin-top: 12px;
         }
         
-        .btn-secondary:hover {
-            background: #e0e0e0;
-        }
+        .btn-secondary:hover { background: #e0e0e0; }
 
         .alert {
             position: fixed;
@@ -390,7 +337,7 @@
             right: 24px;
             padding: 12px 20px;
             background: white;
-            border-left: 4px solid #e94560;
+            border-left: 4px solid;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             border-radius: 0 8px 8px 0;
             font-size: 13px;
@@ -399,74 +346,93 @@
             animation: slideIn 0.3s ease;
         }
         
-        .alert.success { border-left-color: #16c79a; }
-        .alert.warning { border-left-color: #f9a825; }
+        .alert.success { border-color: #16c79a; }
+        .alert.warning { border-color: #f9a825; }
         
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
 
-        .hidden { display: none !important; }
+        .placeholder {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            color: #999;
+            font-style: italic;
+            pointer-events: none;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 1.8;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-        // Tokenizer
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Safe calculation functions
+        const safeToFixed = (num, digits = 2) => {
+            if (num === undefined || num === null || isNaN(num)) return '0.00';
+            return Number(num).toFixed(digits);
+        };
+
+        const getWords = (text) => {
+            if (!text) return [];
+            return text.trim().split(/\s+/).filter(w => w.length > 0);
+        };
+
         const sentenceTokenizer = (text) => {
             if (!text) return [];
             return text.replace(/([.!?])\s+/g, "$1|").split("|").filter(s => s.trim().length > 0);
         };
 
-        // Metrics calculations
         const calculateBurstiness = (sentences) => {
             if (!sentences || sentences.length < 2) return 0;
             const lengths = sentences.map(s => s.split(/\s+/).filter(w => w).length);
+            if (lengths.length === 0) return 0;
             const mean = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+            if (mean === 0) return 0;
             const variance = lengths.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / lengths.length;
-            return Math.sqrt(variance);
+            return Math.sqrt(variance) || 0;
         };
 
         const calculateDiversity = (text) => {
             if (!text) return 0;
             const words = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
-            if (words.length === 0) return 0;
-            const unique = new Set(words);
-            return unique.size / words.length;
+            if (!words.length) return 0;
+            return new Set(words).size / words.length;
         };
 
-        // Baseline Modal Component
-        const BaselineModal = ({ onComplete, onClose }) => {
-            const [selectedOption, setSelectedOption] = useState(null);
+        const BaselineModal = ({ onComplete }) => {
+            const [selected, setSelected] = useState(null);
             const [text, setText] = useState('');
-            const [uploadedFile, setUploadedFile] = useState(null);
+            const [file, setFile] = useState(null);
             const [analyzing, setAnalyzing] = useState(false);
-            
-            const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-            const hasEnoughWords = wordCount >= 100;
 
-            const analyzeContent = async (content, sourceType) => {
+            const wordCount = getWords(text).length;
+            const hasEnough = wordCount >= 100;
+
+            const analyze = async (content, source) => {
                 setAnalyzing(true);
+                await new Promise(r => setTimeout(r, 600));
                 const sentences = sentenceTokenizer(content);
-                const burstiness = calculateBurstiness(sentences);
-                const diversity = calculateDiversity(content);
-                
-                await new Promise(r => setTimeout(r, 800)); // Simulate processing
+                const words = getWords(content);
                 
                 const profile = {
-                    createdAt: new Date().toISOString(),
-                    type: sourceType,
-                    wordCount: content.split(/\s+/).filter(w => w).length,
+                    type: source,
+                    wordCount: words.length,
                     sentenceCount: sentences.length,
-                    avgSentenceLength: sentences.length ? sentences.reduce((acc, s) => acc + s.split(' ').length, 0) / sentences.length : 0,
-                    burstiness: burstiness,
-                    lexicalDiversity: diversity,
-                    confidence: Math.min(1, (content.split(/\s+/).filter(w => w).length) / 2000),
-                    isGeneric: sourceType === 'generic'
+                    burstiness: calculateBurstiness(sentences),
+                    lexicalDiversity: calculateDiversity(content),
+                    confidence: Math.min(1, words.length / 2000),
+                    createdAt: new Date().toISOString()
                 };
                 
                 localStorage.setItem('wdp_baseline', JSON.stringify(profile));
@@ -474,87 +440,59 @@
                 onComplete(profile);
             };
 
-            const handleTextSubmit = () => {
-                if (hasEnoughWords) {
-                    analyzeContent(text, 'text_input');
-                }
-            };
-
-            const handleFileUpload = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    setUploadedFile(file);
-                    // Simulate file reading
+            const handleFile = (e) => {
+                const f = e.target.files[0];
+                if (f) {
+                    setFile(f);
                     const reader = new FileReader();
-                    reader.onload = (event) => {
-                        // In real app, would parse PDF/DOCX here
-                        setText(event.target.result || `Content of ${file.name} would be extracted here...`);
-                    };
-                    reader.readAsText(file);
+                    reader.onload = (e) => setText(e.target.result || `Content from ${f.name}`);
+                    reader.readAsText(f);
                 }
             };
 
-            const handleFileAnalyze = () => {
-                if (text) {
-                    analyzeContent(text, 'file_upload');
-                }
-            };
-
-            const handleSkip = () => {
-                const genericProfile = {
-                    createdAt: new Date().toISOString(),
+            const skip = () => {
+                const generic = {
                     type: 'generic',
                     wordCount: 0,
-                    sentenceCount: 0,
-                    avgSentenceLength: 15,
                     burstiness: 0.35,
                     lexicalDiversity: 0.55,
                     confidence: 0.5,
-                    isGeneric: true
+                    isGeneric: true,
+                    createdAt: new Date().toISOString()
                 };
-                localStorage.setItem('wdp_baseline', JSON.stringify(genericProfile));
-                onComplete(genericProfile);
+                localStorage.setItem('wdp_baseline', JSON.stringify(generic));
+                onComplete(generic);
             };
 
             return (
-                <div className="modal-overlay">
+                <div className="modal-overlay" onClick={e => e.target === e.currentTarget && skip()}>
                     <div className="modal-content">
                         <div className="modal-header">
                             <h2>Baseline Calibration</h2>
-                            <p className="modal-subtitle">
-                                Establish your authentic writing profile to detect voice drift and AI detection risks
-                            </p>
+                            <p className="modal-subtitle">Establish your authentic writing profile</p>
                         </div>
-                        
                         <div className="modal-body">
                             <div className="baseline-options">
-                                {/* Option 1: Paste/Write */}
-                                <div 
-                                    className={`baseline-option ${selectedOption === 'text' ? 'selected' : ''}`}
-                                    onClick={() => setSelectedOption('text')}
-                                >
+                                <div className={`baseline-option ${selected === 'text' ? 'selected' : ''}`} onClick={() => setSelected('text')}>
                                     <div className="baseline-icon">✏️</div>
                                     <div className="baseline-title">Paste or Write Sample</div>
-                                    <div className="baseline-desc">
-                                        Paste existing essays or write directly (minimum 100 words)
-                                    </div>
-                                    
-                                    {selectedOption === 'text' && (
+                                    <div className="baseline-desc">Minimum 100 words of your previous writing</div>
+                                    {selected === 'text' && (
                                         <div className="input-section">
-                                            <textarea
-                                                className="textarea-baseline"
-                                                value={text}
-                                                onChange={(e) => setText(e.target.value)}
-                                                placeholder="Paste or type your writing sample here..."
+                                            <textarea 
+                                                className="textarea-baseline" 
+                                                value={text} 
+                                                onChange={e => setText(e.target.value)}
+                                                placeholder="Paste your writing here..."
                                                 autoFocus
                                             />
-                                            <div className={`word-count ${hasEnoughWords ? 'valid' : ''}`}>
-                                                {wordCount} / 100 words {hasEnoughWords ? '✓' : 'minimum'}
+                                            <div className={`word-count ${hasEnough ? 'valid' : ''}`}>
+                                                {wordCount} / 100 words {hasEnough ? '✓' : ''}
                                             </div>
                                             <button 
-                                                className="btn btn-primary"
-                                                onClick={handleTextSubmit}
-                                                disabled={!hasEnoughWords || analyzing}
+                                                className="btn btn-primary" 
+                                                onClick={() => analyze(text, 'text')}
+                                                disabled={!hasEnough || analyzing}
                                             >
                                                 {analyzing ? 'Analyzing...' : 'Create Profile'}
                                             </button>
@@ -562,34 +500,20 @@
                                     )}
                                 </div>
 
-                                {/* Option 2: Upload File */}
-                                <div 
-                                    className={`baseline-option ${selectedOption === 'file' ? 'selected' : ''}`}
-                                    onClick={() => setSelectedOption('file')}
-                                >
+                                <div className={`baseline-option ${selected === 'file' ? 'selected' : ''}`} onClick={() => setSelected('file')}>
                                     <div className="baseline-icon">📄</div>
                                     <div className="baseline-title">Upload Your Sample</div>
-                                    <div className="baseline-desc">
-                                        Upload a document (DOCX, PDF, TXT, or MD)
-                                    </div>
-                                    
-                                    {selectedOption === 'file' && (
+                                    <div className="baseline-desc">DOCX, PDF, TXT, or MD format</div>
+                                    {selected === 'file' && (
                                         <div className="input-section">
-                                            <input 
-                                                type="file" 
-                                                id="file-upload"
-                                                style={{display: 'none'}}
-                                                accept=".docx,.pdf,.txt,.md"
-                                                onChange={handleFileUpload}
-                                            />
-                                            <label htmlFor="file-upload" className="file-input-label">
-                                                {uploadedFile ? `Selected: ${uploadedFile.name}` : 'Click to select file'}
+                                            <input type="file" id="file-in" style={{display:'none'}} accept=".txt,.md" onChange={handleFile} />
+                                            <label htmlFor="file-in" className="file-input-label">
+                                                {file ? file.name : 'Click to select file'}
                                             </label>
-                                            
-                                            {uploadedFile && (
+                                            {file && (
                                                 <button 
-                                                    className="btn btn-primary"
-                                                    onClick={handleFileAnalyze}
+                                                    className="btn btn-primary" 
+                                                    onClick={() => analyze(text || `Content from ${file.name}`, 'file')}
                                                     disabled={analyzing}
                                                 >
                                                     {analyzing ? 'Processing...' : 'Analyze File'}
@@ -599,21 +523,11 @@
                                     )}
                                 </div>
 
-                                {/* Option 3: Skip */}
-                                <div 
-                                    className="baseline-option"
-                                    style={{borderStyle: 'dashed', opacity: 0.9}}
-                                >
+                                <div className="baseline-option" style={{borderStyle:'dashed'}}>
                                     <div className="baseline-icon">⏭️</div>
                                     <div className="baseline-title">Skip for Later</div>
-                                    <div className="baseline-desc">
-                                        Use generic L2 baseline. You can calibrate your personal baseline anytime from Settings.
-                                    </div>
-                                    <button 
-                                        className="btn btn-secondary"
-                                        onClick={handleSkip}
-                                        disabled={analyzing}
-                                    >
+                                    <div className="baseline-desc">Use generic L2 baseline for now</div>
+                                    <button className="btn btn-secondary" onClick={skip}>
                                         Continue with Generic Baseline
                                     </button>
                                 </div>
@@ -624,204 +538,168 @@
             );
         };
 
-        // Main App
         const App = () => {
-            const [showBaseline, setShowBaseline] = useState(false);
+            const [showModal, setShowModal] = useState(false);
             const [baseline, setBaseline] = useState(null);
+            const [content, setContent] = useState('');
             const [alerts, setAlerts] = useState([]);
-            const [editorContent, setEditorContent] = useState('');
-            
-            // Load baseline on mount
+
             useEffect(() => {
-                const saved = localStorage.getItem('wdp_baseline');
-                if (!saved) {
-                    setShowBaseline(true);
-                } else {
-                    setBaseline(JSON.parse(saved));
+                try {
+                    const saved = localStorage.getItem('wdp_baseline');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        // Validate required fields
+                        if (parsed && typeof parsed.burstiness === 'number') {
+                            setBaseline(parsed);
+                        } else {
+                            setShowModal(true);
+                        }
+                    } else {
+                        setShowModal(true);
+                    }
+                } catch (e) {
+                    console.error('Error loading baseline:', e);
+                    setShowModal(true);
                 }
             }, []);
 
-            // Calculate metrics
-            const sentences = sentenceTokenizer(editorContent);
-            const burstiness = calculateBurstiness(sentences);
-            const diversity = calculateDiversity(editorContent);
-            const wordCount = editorContent.split(/\s+/).filter(w => w).length;
-
-            const handleBaselineComplete = (profile) => {
-                setBaseline(profile);
-                setShowBaseline(false);
-                addAlert('Baseline calibrated successfully!', 'success');
-            };
-
-            const addAlert = (message, type = 'info') => {
+            const showAlert = (msg, type = 'info') => {
                 const id = Date.now();
-                setAlerts(prev => [...prev, { id, message, type }]);
-                setTimeout(() => {
-                    setAlerts(prev => prev.filter(a => a.id !== id));
-                }, 4000);
+                setAlerts(prev => [...prev, {id, msg, type}]);
+                setTimeout(() => setAlerts(prev => prev.filter(a => a.id !== id)), 4000);
             };
 
-            const handleEditorChange = (e) => {
-                setEditorContent(e.target.value);
+            const complete = (profile) => {
+                setBaseline(profile);
+                setShowModal(false);
+                showAlert('Baseline calibrated successfully!', 'success');
             };
 
-            // Placeholder logic
-            const showPlaceholder = editorContent.length === 0;
+            const sentences = sentenceTokenizer(content);
+            const words = getWords(content);
+            const burstiness = calculateBurstiness(sentences);
+            const diversity = calculateDiversity(content);
+
+            // Ensure baseline has required fields
+            const safeBaseline = baseline || {};
+            const baselineBurstiness = safeBaseline.burstiness || 0;
+            const baselineConfidence = safeBaseline.confidence || 0;
+            const isGeneric = safeBaseline.isGeneric || false;
 
             return (
                 <div className="app-container">
-                    {showBaseline && (
-                        <BaselineModal 
-                            onComplete={handleBaselineComplete}
-                        />
-                    )}
+                    {showModal && <BaselineModal onComplete={complete} />}
                     
-                    {/* Alerts */}
-                    {alerts.map(alert => (
-                        <div key={alert.id} className={`alert ${alert.type}`}>
-                            {alert.message}
-                        </div>
+                    {alerts.map(a => (
+                        <div key={a.id} className={`alert ${a.type}`}>{a.msg}</div>
                     ))}
 
-                    {/* Header */}
                     <header className="header">
                         <div className="logo">
                             <div className="logo-icon">W</div>
                             <div>
-                                <div style={{fontWeight: 700}}>Writing Defense Platform</div>
-                                <div style={{fontSize: '11px', opacity: 0.8}}>Phase 1 MVP</div>
+                                <div style={{fontWeight:700}}>Writing Defense</div>
+                                <div style={{fontSize:11, opacity:0.8}}>Phase 1 MVP</div>
                             </div>
                         </div>
-                        
                         <div 
                             className={`status-badge ${baseline ? 'ready' : 'pending'}`}
-                            onClick={() => setShowBaseline(true)}
+                            onClick={() => setShowModal(true)}
                         >
-                            {baseline ? `Baseline ${(baseline.confidence * 100).toFixed(0)}%` : '⚠️ No Baseline Set'}
+                            {baseline ? `Baseline ${(baselineConfidence * 100).toFixed(0)}%` : '⚠️ No Baseline'}
                         </div>
                     </header>
 
-                    {/* Left Sidebar */}
-                    <aside className="sidebar sidebar-left">
+                    <aside className="sidebar">
                         <div className="card">
                             <h3>Baseline Profile</h3>
                             {baseline ? (
-                                <div>
+                                <>
                                     <div className="metric">
                                         <span>Type</span>
-                                        <span style={{fontWeight: 600, textTransform: 'capitalize'}}>
-                                            {baseline.type === 'generic' ? 'Generic L2' : 'Personal'}
-                                        </span>
+                                        <span style={{fontWeight:600}}>{isGeneric ? 'Generic L2' : 'Personal'}</span>
                                     </div>
                                     <div className="metric">
-                                        <span>Words Analyzed</span>
-                                        <span style={{fontWeight: 600}}>
-                                            {baseline.isGeneric ? 'N/A' : baseline.wordCount}
-                                        </span>
+                                        <span>Words</span>
+                                        <span style={{fontWeight:600}}>{isGeneric ? 'N/A' : (safeBaseline.wordCount || 0)}</span>
                                     </div>
                                     <div className="metric">
                                         <span>Confidence</span>
-                                        <span style={{fontWeight: 600, color: baseline.confidence > 0.8 ? '#16c79a' : '#f9a825'}}>
-                                            {(baseline.confidence * 100).toFixed(0)}%
+                                        <span style={{fontWeight:600, color: baselineConfidence > 0.8 ? '#16c79a' : '#f9a825'}}>
+                                            {(baselineConfidence * 100).toFixed(0)}%
                                         </span>
                                     </div>
                                     <div className="metric">
                                         <span>Burstiness</span>
-                                        <span style={{fontWeight: 600}}>{baseline.burstiness.toFixed(2)}</span>
+                                        <span style={{fontWeight:600}}>{safeToFixed(baselineBurstiness)}</span>
                                     </div>
                                     <button 
-                                        onClick={() => setShowBaseline(true)}
-                                        style={{
-                                            width: '100%', 
-                                            marginTop: '12px', 
-                                            padding: '8px', 
-                                            background: '#f0f0f0', 
-                                            border: 'none', 
-                                            borderRadius: '4px', 
-                                            cursor: 'pointer',
-                                            fontSize: '12px',
-                                            fontWeight: 500
-                                        }}
+                                        className="btn btn-secondary" 
+                                        style={{marginTop:12, fontSize:12}}
+                                        onClick={() => setShowModal(true)}
                                     >
-                                        Recalibrate Baseline
+                                        Recalibrate
                                     </button>
-                                </div>
+                                </>
                             ) : (
-                                <p style={{fontSize: '13px', color: '#666', fontStyle: 'italic'}}>
-                                    No baseline calibrated. Click "No Baseline Set" above to start.
-                                </p>
+                                <p style={{fontSize:13, color:'#666', fontStyle:'italic'}}>No baseline set</p>
                             )}
                         </div>
 
-                        {baseline && (
+                        {baseline && !isGeneric && (
                             <div className="card">
                                 <h3>Voice Drift</h3>
                                 <div className="metric">
-                                    <span>Current Burstiness</span>
-                                    <span className={`metric-value ${Math.abs(burstiness - baseline.burstiness) > 2 ? 'warning' : 'success'}`} style={{fontSize: '14px'}}>
-                                        {burstiness.toFixed(2)}
+                                    <span>Current vs Baseline</span>
+                                    <span style={{color: Math.abs(burstiness - baselineBurstiness) > 2 ? '#e94560' : '#16c79a', fontWeight:600}}>
+                                        Δ {safeToFixed(burstiness - baselineBurstiness)}
                                     </span>
-                                </div>
-                                <div style={{fontSize: '12px', color: '#666', marginTop: '8px'}}>
-                                    Δ {(burstiness - baseline.burstiness).toFixed(2)} from baseline
                                 </div>
                             </div>
                         )}
                     </aside>
 
-                    {/* Main Content */}
                     <main className="main-content">
                         <div className="toolbar">
                             <button onClick={() => document.execCommand('bold')}><b>B</b></button>
                             <button onClick={() => document.execCommand('italic')}><i>I</i></button>
-                            <div style={{width: '1px', height: '20px', background: '#ddd', margin: '0 8px'}}></div>
-                            <span style={{fontSize: '13px', color: '#666'}}>
-                                {wordCount} words • {sentences.length} sentences
-                            </span>
+                            <div style={{marginLeft:'auto', fontSize:13, color:'#666'}}>
+                                {words.length} words • {sentences.length} sentences
+                            </div>
                         </div>
-                        
                         <div className="editor-wrapper">
-                            {showPlaceholder && (
-                                <div className="editor-placeholder">
-                                    Start writing here... The Shadow system will analyze your text in real-time as you type.
-                                </div>
+                            {content.length === 0 && (
+                                <div className="placeholder">Start writing here...</div>
                             )}
                             <textarea
                                 className="editor-content"
-                                value={editorContent}
-                                onChange={handleEditorChange}
+                                value={content}
+                                onChange={e => setContent(e.target.value)}
                                 spellCheck={false}
                             />
                         </div>
                     </main>
 
-                    {/* Right Sidebar */}
                     <aside className="sidebar sidebar-right">
                         <div className="card">
                             <h3>Real-time Metrics</h3>
                             <div className="metric">
                                 <span>Burstiness</span>
-                                <span className="metric-value">{burstiness.toFixed(2)}</span>
+                                <span className="metric-value">{safeToFixed(burstiness)}</span>
                             </div>
                             <div className="metric">
                                 <span>Lexical Diversity</span>
-                                <span className="metric-value">{diversity.toFixed(2)}</span>
-                            </div>
-                            <div className="metric">
-                                <span>Sentences</span>
-                                <span className="metric-value">{sentences.length}</span>
+                                <span className="metric-value">{safeToFixed(diversity)}</span>
                             </div>
                         </div>
-
+                        
                         <div className="card">
                             <h3>Shadow System</h3>
-                            <div style={{padding: '12px', background: '#f5f5f5', borderRadius: '6px', marginTop: '8px'}}>
-                                <div style={{fontSize: '12px', color: '#666', marginBottom: '8px'}}>AI Detection Risk</div>
-                                <div style={{fontSize: '24px', fontWeight: '700', color: burstiness < 2 ? '#e94560' : '#16c79a'}}>
+                            <div style={{padding:12, background:'#f5f5f5', borderRadius:6, textAlign:'center'}}>
+                                <div style={{fontSize:11, color:'#666', marginBottom:4}}>AI Detection Risk</div>
+                                <div style={{fontSize:20, fontWeight:700, color: burstiness < 2 ? '#e94560' : burstiness > 8 ? '#16c79a' : '#f9a825'}}>
                                     {burstiness < 2 ? 'HIGH' : burstiness > 8 ? 'LOW' : 'MODERATE'}
-                                </div>
-                                <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>
-                                    Based on sentence variance
                                 </div>
                             </div>
                         </div>
@@ -830,9 +708,13 @@
             );
         };
 
-        // Render
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        try {
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        } catch (err) {
+            console.error('Render error:', err);
+            document.getElementById('root').innerHTML = `<div style="padding:20px;color:red">Error: ${err.message}</div>`;
+        }
     </script>
 </body>
 </html>
