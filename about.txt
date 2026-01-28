@@ -1,0 +1,47 @@
+✅ Core Phase 1 MVP Features:
+Baseline Calibration (0A)
+200+ word minimum validation
+Computes burstiness, lexical diversity, sentence patterns
+Saves to IndexedDB with metadata (timestamp, model versions)
+Shadow System (0B, Feature 19)
+Real-time AI detector emulation using heuristics
+Visual bar chart showing risk per sentence
+Color-coded: Green (Safe), Yellow (Caution), Red (High Risk)
+Burstiness Detection (Feature 3, 10)
+Real-time EKG visualization
+Canvas-drawn sentence length variance chart
+Highlights low-variance (robotic) patterns
+Stumble System (Feature 18)
+Keystroke interval logging
+Copy-paste detection (excludes from analysis)
+Shows cognitive pause duration
+Source File Management (Feature 22)
+PDF upload with OCR (Tesseract.js)
+Scanned vs. text-based PDF detection
+TXT file support
+Similarity warnings
+Data Export (Important Addition 6)
+CSV export (Excel/R/Pandas compatible)
+JSON export with schema validation
+Includes timestamps, metrics, stumble events
+Accessibility & UI
+Keyboard navigation
+WCAG AA color contrast
+Responsive layout
+Onboarding tutorial
+📊 Research Features:
+Auto-save every 30 seconds (Session State Recovery)
+Metadata tracking (model versions, timestamps)
+Research consent toggle
+Construct validity logging
+🛡️ Privacy:
+100% Client-side: No data leaves the browser
+IndexedDB storage only
+Tesseract.js runs locally for OCR
+No external API calls for text analysis
+💾 To Use It:
+Copy all the code above
+Save as writing-defense.html
+Open in any modern browser (Chrome/Edge/Firefox recommended)
+Start writing!
+The app is fully self-contained and will work offline after the first load. All data persists in the browser's local storage.
