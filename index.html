@@ -3,1021 +3,560 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Writing Defense Platform - L2 Writing Integrity Tool</title>
+    <title>Writing Defense Platform</title>
     
-    <!-- External Libraries -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Load React and dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/compromise@14.10.0/builds/compromise.min.js"></script>
     
     <style>
-        :root {
-            --bg-primary: #fafafa;
-            --bg-secondary: #f0f0f0;
-            --bg-tertiary: #e0e0e0;
-            --text-primary: #1a1a1a;
-            --text-secondary: #4a4a4a;
-            --accent-primary: #2563eb;
-            --accent-danger: #dc2626;
-            --accent-warning: #f59e0b;
-            --accent-success: #16a34a;
-            --border-color: #d1d5db;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --focus-ring: 2px solid #2563eb;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-primary: #0f0f0f;
-                --bg-secondary: #1a1a1a;
-                --bg-tertiary: #2a2a2a;
-                --text-primary: #f0f0f0;
-                --text-secondary: #a0a0a0;
-                --border-color: #404040;
-            }
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.5;
+            background: #f5f5f5; 
+            height: 100vh; 
             overflow: hidden;
         }
-
+        
+        #root { height: 100vh; width: 100vw; }
+        
         .app-container {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 60px 1fr;
             height: 100vh;
+            background: #fafafa;
+        }
+        
+        @media (max-width: 1100px) {
+            .app-container { grid-template-columns: 260px 1fr 260px; }
+        }
+        
+        @media (max-width: 900px) {
+            .app-container { 
+                grid-template-columns: 1fr; 
+                grid-template-rows: 60px auto 1fr auto; 
+            }
+            .sidebar { display: none; }
         }
 
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border-width: 0;
-        }
-
-        .skip-link {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: var(--accent-primary);
+        .header {
+            grid-column: 1 / -1;
+            background: #1a1a2e;
             color: white;
-            padding: 8px;
-            text-decoration: none;
-            z-index: 100;
-        }
-
-        .skip-link:focus {
-            top: 0;
-        }
-
-        .app-header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
             display: flex;
+            align-items: center;
+            padding: 0 24px;
             justify-content: space-between;
+            border-bottom: 3px solid #16213e;
+        }
+        
+        .logo {
+            display: flex;
             align-items: center;
-            flex-shrink: 0;
+            gap: 12px;
         }
-
-        .app-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .header-controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border-color);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn:hover {
-            background: var(--bg-tertiary);
-            transform: translateY(-1px);
-        }
-
-        .btn:focus-visible {
-            outline: var(--focus-ring);
-            outline-offset: 2px;
-        }
-
-        .btn-primary {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-secondary {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            border-color: var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            background: var(--bg-tertiary);
-        }
-
-        .btn-danger {
-            background: var(--accent-danger);
-            color: white;
-            border-color: var(--accent-danger);
-        }
-
-        .main-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .editor-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            position: relative;
-        }
-
-        .editor-toolbar {
-            padding: 0.5rem 1rem;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .toolbar-btn {
-            padding: 0.25rem 0.75rem;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-
-        .toolbar-btn:hover, .toolbar-btn.active {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-        }
-
-        .editor-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-            position: relative;
-        }
-
-        .editor-content {
-            max-width: 800px;
-            margin: 0 auto;
-            min-height: 100%;
-            padding: 2rem;
-            background: white;
-            box-shadow: var(--shadow-md);
-            border-radius: 0.5rem;
-            font-size: 1.125rem;
-            line-height: 1.8;
-            color: #1a1a1a;
-        }
-
-        .editor-content:focus {
-            outline: none;
-        }
-
-        .shadow-overlay {
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 8px;
-            display: flex;
-            flex-direction: column;
-            pointer-events: none;
-        }
-
-        .shadow-segment {
-            flex: 1;
-            min-height: 20px;
-            transition: background-color 0.3s;
-            position: relative;
-        }
-
-        .shadow-segment:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 10;
-        }
-
-        .shadow-safe { background: var(--accent-success); opacity: 0.3; }
-        .shadow-warning { background: var(--accent-warning); opacity: 0.6; }
-        .shadow-danger { background: var(--accent-danger); opacity: 0.8; }
-
-        .stumble-indicator {
-            position: absolute;
-            left: -24px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--accent-warning);
-            border: 2px solid white;
-            box-shadow: 0 0 0 2px var(--accent-warning);
-            cursor: help;
-            animation: pulse 2s infinite;
-            z-index: 5;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-
-        .sources-panel {
-            width: 350px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 1rem;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .file-upload-zone {
-            padding: 1.5rem;
-            margin: 1rem;
-            border: 2px dashed var(--border-color);
-            border-radius: 0.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: var(--bg-primary);
-        }
-
-        .file-upload-zone:hover, .file-upload-zone.drag-over {
-            border-color: var(--accent-primary);
-            background: rgba(37, 99, 235, 0.05);
-        }
-
-        .source-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 1rem;
-        }
-
-        .source-item {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.375rem;
-            padding: 0.75rem;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .source-item:hover {
-            border-color: var(--accent-primary);
-        }
-
-        .source-item.active {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-        }
-
-        .source-badge {
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--accent-danger);
-            color: white;
-            font-size: 11px;
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: #e94560;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 20px;
+            color: white;
         }
-
-        .source-preview {
-            height: 200px;
-            background: var(--bg-primary);
-            border-top: 2px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem;
-            overflow-y: auto;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.875rem;
-            line-height: 1.6;
-            color: var(--text-primary);
-            margin: 0 1rem 1rem 1rem;
-            border-radius: 0.375rem;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        @media (prefers-color-scheme: dark) {
-            .source-preview {
-                background: #1a1a1a;
-                border-color: #404040;
-                box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-                color: #f0f0f0;
-            }
-            .editor-content {
-                background: #1a1a1a;
-                color: #f0f0f0;
-            }
-        }
-
-        @media (prefers-color-scheme: light) {
-            .source-preview {
-                background: #ffffff;
-                border: 1px solid #d1d5db;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-                color: #1a1a1a;
-            }
-        }
-
-        .similarity-warning {
-            background: rgba(245, 158, 11, 0.2);
-            border-left: 4px solid var(--accent-warning);
-            padding: 0.75rem;
-            margin: 0.5rem 0;
-            border-radius: 0 0.375rem 0.375rem 0;
-            font-size: 0.875rem;
-            color: var(--text-primary);
+        
+        .status-badge {
+            background: #0f3460;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 500;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
         }
+        
+        .status-badge.ready { background: #16c79a; color: #1a1a2e; }
+        .status-badge.pending { background: #f9a825; color: #1a1a2e; }
 
-        @media (prefers-color-scheme: dark) {
-            .similarity-warning {
-                background: rgba(245, 158, 11, 0.15);
-                color: #f0f0f0;
-            }
+        .sidebar {
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 20px;
         }
-
-        .metrics-panel {
-            width: 300px;
-            background: var(--bg-secondary);
+        
+        .sidebar-right {
+            border-right: none;
+            border-left: 1px solid #e0e0e0;
+        }
+        
+        .main-content {
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .metric-card {
-            background: var(--bg-primary);
-            margin: 1rem;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
-        }
-
-        .metric-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            line-height: 1;
-        }
-
-        .metric-subtext {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: 0.25rem;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--bg-tertiary);
-            border-radius: 4px;
-            margin-top: 0.5rem;
+            background: white;
             overflow: hidden;
         }
-
-        .progress-fill {
-            height: 100%;
-            transition: width 0.3s, background-color 0.3s;
+        
+        .toolbar {
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: #fafafa;
         }
-
-        .chart-container {
-            height: 150px;
-            margin-top: 1rem;
+        
+        .toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+        }
+        
+        .toolbar button:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+        
+        .editor-wrapper {
+            flex: 1;
             position: relative;
+            overflow: hidden;
+        }
+        
+        .editor-content {
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 1.8;
+            color: #333;
+            border: none;
+            outline: none;
+            resize: none;
+            overflow-y: auto;
+            background: white;
+        }
+        
+        .editor-content:focus { outline: none; }
+        
+        .editor-placeholder {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            color: #999;
+            font-style: italic;
+            pointer-events: none;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 1.8;
         }
 
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+        
+        .metric:last-child { border-bottom: none; }
+        
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+        
+        .metric-value.warning { color: #e94560; }
+        .metric-value.success { color: #16c79a; }
+
+        /* Modal Styles */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 50;
-            padding: 1rem;
+            padding: 20px;
+            backdrop-filter: blur(4px);
         }
-
+        
         .modal-content {
-            background: var(--bg-primary);
-            border-radius: 0.75rem;
-            max-width: 700px;
-            width: 100%;
+            background: white;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 12px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
         }
-
+        
         .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #e0e0e0;
         }
-
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #1a1a2e;
+            font-size: 22px;
+        }
+        
+        .modal-subtitle {
+            margin: 8px 0 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
         .modal-body {
-            padding: 1.5rem;
+            padding: 24px;
         }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-        }
-
-        .consent-option {
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .consent-option:hover {
-            border-color: var(--accent-primary);
-            background: rgba(37, 99, 235, 0.05);
-        }
-
-        .consent-option.selected {
-            border-color: var(--accent-primary);
-            background: rgba(37, 99, 235, 0.1);
-        }
-
-        /* Baseline Modal Specific Styles */
+        
         .baseline-options {
-            display: grid;
-            gap: 1rem;
-            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
-
-        .baseline-option-card {
-            border: 2px solid var(--border-color);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
+        
+        .baseline-option {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
             cursor: pointer;
             transition: all 0.2s;
-            background: var(--bg-primary);
+            background: white;
         }
-
-        .baseline-option-card:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+        
+        .baseline-option:hover {
+            border-color: #e94560;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(233, 69, 96, 0.1);
         }
-
-        .baseline-option-card.selected {
-            border-color: var(--accent-primary);
-            background: rgba(37, 99, 235, 0.05);
+        
+        .baseline-option.selected {
+            border-color: #e94560;
+            background: #fff5f7;
         }
-
-        .baseline-option-card.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        
+        .baseline-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
         }
-
-        .baseline-option-icon {
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .baseline-option-title {
+        
+        .baseline-title {
             font-weight: 600;
-            font-size: 1.125rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: #1a1a2e;
+        }
+        
+        .baseline-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
         }
 
-        .baseline-option-desc {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
+        .input-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed #ddd;
         }
-
-        .baseline-textarea {
+        
+        .textarea-baseline {
             width: 100%;
-            min-height: 150px;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             font-family: inherit;
-            font-size: 0.9375rem;
+            font-size: 14px;
             resize: vertical;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            margin-top: 0.5rem;
+            outline: none;
         }
-
-        .baseline-textarea:focus {
-            outline: var(--focus-ring);
-            outline-offset: 2px;
+        
+        .textarea-baseline:focus {
+            border-color: #e94560;
+            box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.1);
         }
 
         .word-count {
             text-align: right;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-top: 0.5rem;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
         }
-
+        
         .word-count.valid {
-            color: var(--accent-success);
-            font-weight: 500;
+            color: #16c79a;
+            font-weight: 600;
         }
 
-        .file-input-hidden {
-            display: none;
-        }
-
-        .upload-button {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px dashed var(--border-color);
-            border-radius: 0.5rem;
-            background: transparent;
-            color: var(--text-secondary);
+        .file-input-label {
+            display: block;
+            padding: 16px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.2s;
-            margin-top: 0.5rem;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .file-input-label:hover {
+            border-color: #e94560;
+            background: #fff5f7;
         }
 
-        .upload-button:hover {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-            background: rgba(37, 99, 235, 0.05);
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: #e94560;
+            color: white;
+            width: 100%;
+            margin-top: 12px;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #d63d56;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+            width: 100%;
+            margin-top: 12px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
         }
 
         .alert {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--bg-primary);
-            border-left: 4px solid var(--accent-warning);
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            max-width: 400px;
-            z-index: 40;
-            animation: slideIn 0.3s ease-out;
-            color: var(--text-primary);
+            top: 80px;
+            right: 24px;
+            padding: 12px 20px;
+            background: white;
+            border-left: 4px solid #e94560;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            max-width: 300px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
         }
-
+        
+        .alert.success { border-left-color: #16c79a; }
+        .alert.warning { border-left-color: #f9a825; }
+        
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
 
-        .alert-header {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .alert-close {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.25rem;
-            color: var(--text-secondary);
-        }
-
-        @media (max-width: 1200px) {
-            .sources-panel { width: 300px; }
-            .metrics-panel { width: 250px; }
-        }
-
-        @media (max-width: 768px) {
-            .main-layout { flex-direction: column; }
-            .sources-panel, .metrics-panel { 
-                width: 100%; 
-                height: 300px;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-            }
-            .baseline-options {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
-        }
-
-        @media (prefers-contrast: high) {
-            :root {
-                --border-color: #000000;
-                --text-primary: #000000;
-                --bg-primary: #ffffff;
-            }
-        }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef, useCallback } = React;
+        const { useState, useEffect, useRef } = React;
 
-        // Utility Functions
+        // Tokenizer
         const sentenceTokenizer = (text) => {
+            if (!text) return [];
             return text.replace(/([.!?])\s+/g, "$1|").split("|").filter(s => s.trim().length > 0);
         };
 
+        // Metrics calculations
         const calculateBurstiness = (sentences) => {
-            if (sentences.length < 2) return { global: 0, local: [] };
-            const lengths = sentences.map(s => s.split(/\s+/).length);
+            if (!sentences || sentences.length < 2) return 0;
+            const lengths = sentences.map(s => s.split(/\s+/).filter(w => w).length);
             const mean = lengths.reduce((a, b) => a + b, 0) / lengths.length;
-            const variance = lengths.reduce((acc, len) => acc + Math.pow(len - mean, 2), 0) / lengths.length;
-            const sd = Math.sqrt(variance);
-            const burstiness = sd / mean;
-            
-            const local = [];
-            for (let i = 0; i < lengths.length - 4; i++) {
-                const window = lengths.slice(i, i + 5);
-                const wMean = window.reduce((a,b) => a+b,0) / 5;
-                const wVar = window.reduce((acc, len) => acc + Math.pow(len - wMean, 2), 0) / 5;
-                local.push(Math.sqrt(wVar));
-            }
-            
-            return { global: burstiness, local, mean, sd };
+            const variance = lengths.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / lengths.length;
+            return Math.sqrt(variance);
         };
 
-        const calculateTTR = (text) => {
-            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
-            if (words.length === 0) return { raw: 0, mattr: 0 };
-            
-            const unique = new Set(words).size;
-            const raw = unique / words.length;
-            
-            let mattrSum = 0;
-            let count = 0;
-            for (let i = 0; i <= words.length - 50; i++) {
-                const window = words.slice(i, i + 50);
-                const windowUnique = new Set(window).size;
-                mattrSum += windowUnique / 50;
-                count++;
-            }
-            
-            return { 
-                raw, 
-                mattr: count > 0 ? mattrSum / count : raw,
-                wordCount: words.length,
-                uniqueCount: unique
-            };
+        const calculateDiversity = (text) => {
+            if (!text) return 0;
+            const words = text.toLowerCase().match(/\b[a-z]+\b/g) || [];
+            if (words.length === 0) return 0;
+            const unique = new Set(words);
+            return unique.size / words.length;
         };
 
-        const calculatePerplexity = (text) => {
-            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
-            if (words.length < 2) return 100;
-            
-            const commonWords = new Set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at']);
-            let rareCount = 0;
-            words.forEach(word => {
-                if (!commonWords.has(word) && word.length > 6) rareCount++;
-            });
-            
-            return Math.min(200, 80 + (rareCount / words.length) * 200);
-        };
-
-        const cosineSimilarity = (vecA, vecB) => {
-            let dot = 0, normA = 0, normB = 0;
-            for (let i = 0; i < vecA.length; i++) {
-                dot += vecA[i] * vecB[i];
-                normA += vecA[i] * vecA[i];
-                normB += vecB[i] * vecB[i];
-            }
-            return dot / (Math.sqrt(normA) * Math.sqrt(normB) || 1);
-        };
-
-        const textToVector = (text, vocab) => {
-            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
-            const vec = new Array(vocab.length).fill(0);
-            words.forEach(word => {
-                const idx = vocab.indexOf(word);
-                if (idx !== -1) vec[idx]++;
-            });
-            return vec;
-        };
-
-        const ConsentModal = ({ onComplete }) => {
-            const [consents, setConsents] = useState({
-                metrics: true,
-                keystrokes: false,
-                fullText: false,
-                email: false
-            });
-
-            const handleSubmit = () => {
-                localStorage.setItem('wdp_consent', JSON.stringify({
-                    ...consents,
-                    timestamp: new Date().toISOString(),
-                    version: '1.0'
-                }));
-                onComplete();
-            };
-
-            return (
-                <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="consent-title">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h2 id="consent-title">Research Consent & Data Privacy</h2>
-                        </div>
-                        <div className="modal-body">
-                            <p style={{marginBottom: '1rem', color: 'var(--text-secondary)'}}>
-                                This tool collects data for research on L2 writing and AI detection bias. 
-                                Your privacy is protected. You may use all features regardless of consent choices.
-                            </p>
-
-                            <div 
-                                className={`consent-option ${consents.metrics ? 'selected' : ''}`}
-                                onClick={() => setConsents(c => ({...c, metrics: !c.metrics}))}
-                                role="checkbox" 
-                                aria-checked={consents.metrics}
-                            >
-                                <div style={{fontWeight: 600, marginBottom: '0.25rem'}}>
-                                    ☑️ Anonymized Metrics
-                                </div>
-                                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                    Collect burstiness, TTR, and detector scores (cannot identify you)
-                                </div>
-                            </div>
-
-                            <div 
-                                className={`consent-option ${consents.keystrokes ? 'selected' : ''}`}
-                                onClick={() => setConsents(c => ({...c, keystrokes: !c.keystrokes}))}
-                                role="checkbox" 
-                                aria-checked={consents.keystrokes}
-                            >
-                                <div style={{fontWeight: 600, marginBottom: '0.25rem'}}>
-                                    ⌨️ Keystroke Dynamics (The Stumble)
-                                </div>
-                                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                    Track typing patterns and pauses to detect cognitive effort
-                                </div>
-                            </div>
-
-                            <div 
-                                className={`consent-option ${consents.fullText ? 'selected' : ''}`}
-                                onClick={() => setConsents(c => ({...c, fullText: !c.fullText}))}
-                                role="checkbox" 
-                                aria-checked={consents.fullText}
-                            >
-                                <div style={{fontWeight: 600, marginBottom: '0.25rem'}}>
-                                    📝 Full Text Export
-                                </div>
-                                <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                    Allow session text to be included in research corpus
-                                </div>
-                            </div>
-
-                            <div style={{marginTop: '1.5rem', padding: '1rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '0.5rem', fontSize: '0.875rem'}}>
-                                <strong>Your Rights:</strong> You may withdraw consent anytime in Settings. 
-                                Data is stored locally by default. No data is sold to third parties.
-                            </div>
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-primary" onClick={handleSubmit}>
-                                Continue to App
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // NEW BaselineModal with 3 distinct options
-        const BaselineModal = ({ onComplete }) => {
+        // Baseline Modal Component
+        const BaselineModal = ({ onComplete, onClose }) => {
             const [selectedOption, setSelectedOption] = useState(null);
             const [text, setText] = useState('');
             const [uploadedFile, setUploadedFile] = useState(null);
             const [analyzing, setAnalyzing] = useState(false);
-            const [fileContent, setFileContent] = useState('');
             
             const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
             const hasEnoughWords = wordCount >= 100;
 
-            const handleTextAnalyze = async () => {
-                if (!hasEnoughWords) return;
+            const analyzeContent = async (content, sourceType) => {
                 setAnalyzing(true);
-                await analyzeBaseline(text);
-            };
-
-            const handleFileSelect = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                
-                setUploadedFile(file);
-                setAnalyzing(true);
-                
-                try {
-                    let extractedText = '';
-                    if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-                        extractedText = await file.text();
-                    } else if (file.name.endsWith('.docx')) {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const result = await mammoth.extractRawText({arrayBuffer});
-                        extractedText = result.value;
-                    } else if (file.name.endsWith('.pdf')) {
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-                        for (let i = 1; i <= pdf.numPages; i++) {
-                            const page = await pdf.getPage(i);
-                            const content = await page.getTextContent();
-                            extractedText += content.items.map(item => item.str).join(' ') + ' ';
-                        }
-                    }
-                    
-                    setFileContent(extractedText);
-                    await analyzeBaseline(extractedText);
-                } catch (err) {
-                    console.error('Error parsing file:', err);
-                    alert('Error reading file. Please try a different format.');
-                    setAnalyzing(false);
-                }
-            };
-
-            const analyzeBaseline = async (content) => {
                 const sentences = sentenceTokenizer(content);
                 const burstiness = calculateBurstiness(sentences);
-                const ttr = calculateTTR(content);
+                const diversity = calculateDiversity(content);
+                
+                await new Promise(r => setTimeout(r, 800)); // Simulate processing
                 
                 const profile = {
-                    created: new Date().toISOString(),
-                    sampleLength: content.length,
+                    createdAt: new Date().toISOString(),
+                    type: sourceType,
                     wordCount: content.split(/\s+/).filter(w => w).length,
-                    sentenceLength: {
-                        mean: burstiness.mean,
-                        sd: burstiness.sd,
-                        normalRange: [Math.max(5, burstiness.mean - burstiness.sd), burstiness.mean + burstiness.sd]
-                    },
-                    burstinessBaseline: burstiness.global,
-                    lexicalDiversity: {
-                        mattr: ttr.mattr,
-                        normalRange: [Math.max(0.3, ttr.mattr * 0.8), Math.min(0.9, ttr.mattr * 1.2)]
-                    },
-                    vocabulary: [...new Set(content.toLowerCase().match(/\b\w+\b/g) || [])].slice(0, 100)
+                    sentenceCount: sentences.length,
+                    avgSentenceLength: sentences.length ? sentences.reduce((acc, s) => acc + s.split(' ').length, 0) / sentences.length : 0,
+                    burstiness: burstiness,
+                    lexicalDiversity: diversity,
+                    confidence: Math.min(1, (content.split(/\s+/).filter(w => w).length) / 2000),
+                    isGeneric: sourceType === 'generic'
                 };
                 
                 localStorage.setItem('wdp_baseline', JSON.stringify(profile));
-                setTimeout(() => {
-                    setAnalyzing(false);
-                    onComplete();
-                }, 800);
+                setAnalyzing(false);
+                onComplete(profile);
+            };
+
+            const handleTextSubmit = () => {
+                if (hasEnoughWords) {
+                    analyzeContent(text, 'text_input');
+                }
+            };
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    setUploadedFile(file);
+                    // Simulate file reading
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        // In real app, would parse PDF/DOCX here
+                        setText(event.target.result || `Content of ${file.name} would be extracted here...`);
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            const handleFileAnalyze = () => {
+                if (text) {
+                    analyzeContent(text, 'file_upload');
+                }
             };
 
             const handleSkip = () => {
-                // Create generic L2 baseline
                 const genericProfile = {
-                    created: new Date().toISOString(),
-                    type: 'generic_l2',
-                    sentenceLength: {
-                        mean: 15,
-                        sd: 5,
-                        normalRange: [10, 20]
-                    },
-                    burstinessBaseline: 0.35,
-                    lexicalDiversity: {
-                        mattr: 0.55,
-                        normalRange: [0.45, 0.65]
-                    }
+                    createdAt: new Date().toISOString(),
+                    type: 'generic',
+                    wordCount: 0,
+                    sentenceCount: 0,
+                    avgSentenceLength: 15,
+                    burstiness: 0.35,
+                    lexicalDiversity: 0.55,
+                    confidence: 0.5,
+                    isGeneric: true
                 };
                 localStorage.setItem('wdp_baseline', JSON.stringify(genericProfile));
-                onComplete();
+                onComplete(genericProfile);
             };
 
             return (
-                <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="baseline-title">
+                <div className="modal-overlay">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h2 id="baseline-title">Establish Your Baseline Profile</h2>
+                            <h2>Baseline Calibration</h2>
+                            <p className="modal-subtitle">
+                                Establish your authentic writing profile to detect voice drift and AI detection risks
+                            </p>
                         </div>
+                        
                         <div className="modal-body">
-                            <p style={{color: 'var(--text-secondary)', marginBottom: '0.5rem'}}>
-                                To accurately detect when your writing deviates from your authentic voice, we need to establish your personal baseline.
-                            </p>
-                            <p style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                Choose one of the three options below:
-                            </p>
-
                             <div className="baseline-options">
-                                {/* Option 1: Paste/Write Text */}
+                                {/* Option 1: Paste/Write */}
                                 <div 
-                                    className={`baseline-option-card ${selectedOption === 'text' ? 'selected' : ''}`}
+                                    className={`baseline-option ${selectedOption === 'text' ? 'selected' : ''}`}
                                     onClick={() => setSelectedOption('text')}
                                 >
-                                    <div className="baseline-option-icon">✏️</div>
-                                    <div className="baseline-option-title">Paste or Write Sample</div>
-                                    <div className="baseline-option-desc">
-                                        Paste existing essays or write a new sample (minimum 100 words)
+                                    <div className="baseline-icon">✏️</div>
+                                    <div className="baseline-title">Paste or Write Sample</div>
+                                    <div className="baseline-desc">
+                                        Paste existing essays or write directly (minimum 100 words)
                                     </div>
                                     
                                     {selectedOption === 'text' && (
-                                        <div style={{marginTop: '1rem'}}>
-                                            <textarea 
-                                                className="baseline-textarea"
+                                        <div className="input-section">
+                                            <textarea
+                                                className="textarea-baseline"
                                                 value={text}
                                                 onChange={(e) => setText(e.target.value)}
                                                 placeholder="Paste or type your writing sample here..."
-                                                aria-label="Writing sample text"
+                                                autoFocus
                                             />
                                             <div className={`word-count ${hasEnoughWords ? 'valid' : ''}`}>
                                                 {wordCount} / 100 words {hasEnoughWords ? '✓' : 'minimum'}
                                             </div>
                                             <button 
-                                                className="btn btn-primary" 
-                                                style={{width: '100%', marginTop: '0.75rem'}}
-                                                onClick={handleTextAnalyze}
+                                                className="btn btn-primary"
+                                                onClick={handleTextSubmit}
                                                 disabled={!hasEnoughWords || analyzing}
                                             >
-                                                {analyzing ? 'Analyzing...' : 'Analyze & Create Profile'}
+                                                {analyzing ? 'Analyzing...' : 'Create Profile'}
                                             </button>
                                         </div>
                                     )}
@@ -1025,44 +564,36 @@
 
                                 {/* Option 2: Upload File */}
                                 <div 
-                                    className={`baseline-option-card ${selectedOption === 'file' ? 'selected' : ''}`}
+                                    className={`baseline-option ${selectedOption === 'file' ? 'selected' : ''}`}
                                     onClick={() => setSelectedOption('file')}
                                 >
-                                    <div className="baseline-option-icon">📄</div>
-                                    <div className="baseline-option-title">Upload Your Sample</div>
-                                    <div className="baseline-option-desc">
+                                    <div className="baseline-icon">📄</div>
+                                    <div className="baseline-title">Upload Your Sample</div>
+                                    <div className="baseline-desc">
                                         Upload a document (DOCX, PDF, TXT, or MD)
                                     </div>
                                     
                                     {selectedOption === 'file' && (
-                                        <div style={{marginTop: '1rem'}}>
+                                        <div className="input-section">
                                             <input 
                                                 type="file" 
-                                                id="baseline-file"
-                                                className="file-input-hidden"
+                                                id="file-upload"
+                                                style={{display: 'none'}}
                                                 accept=".docx,.pdf,.txt,.md"
-                                                onChange={handleFileSelect}
+                                                onChange={handleFileUpload}
                                             />
-                                            <label 
-                                                htmlFor="baseline-file" 
-                                                className="upload-button"
-                                                style={{display: 'block', textAlign: 'center'}}
-                                            >
+                                            <label htmlFor="file-upload" className="file-input-label">
                                                 {uploadedFile ? `Selected: ${uploadedFile.name}` : 'Click to select file'}
                                             </label>
-                                            {uploadedFile && !analyzing && (
+                                            
+                                            {uploadedFile && (
                                                 <button 
-                                                    className="btn btn-primary" 
-                                                    style={{width: '100%', marginTop: '0.75rem'}}
-                                                    onClick={() => analyzeBaseline(fileContent)}
+                                                    className="btn btn-primary"
+                                                    onClick={handleFileAnalyze}
+                                                    disabled={analyzing}
                                                 >
-                                                    Analyze Uploaded File
+                                                    {analyzing ? 'Processing...' : 'Analyze File'}
                                                 </button>
-                                            )}
-                                            {analyzing && (
-                                                <div style={{textAlign: 'center', marginTop: '0.75rem', color: 'var(--text-secondary)'}}>
-                                                    Processing file...
-                                                </div>
                                             )}
                                         </div>
                                     )}
@@ -1070,22 +601,18 @@
 
                                 {/* Option 3: Skip */}
                                 <div 
-                                    className="baseline-option-card"
-                                    onClick={handleSkip}
-                                    style={{borderStyle: 'dashed'}}
+                                    className="baseline-option"
+                                    style={{borderStyle: 'dashed', opacity: 0.9}}
                                 >
-                                    <div className="baseline-option-icon">⏭️</div>
-                                    <div className="baseline-option-title">Skip for Later</div>
-                                    <div className="baseline-option-desc">
-                                        Use generic L2 baseline for now. You can calibrate your personal baseline later in Settings.
+                                    <div className="baseline-icon">⏭️</div>
+                                    <div className="baseline-title">Skip for Later</div>
+                                    <div className="baseline-desc">
+                                        Use generic L2 baseline. You can calibrate your personal baseline anytime from Settings.
                                     </div>
                                     <button 
-                                        className="btn btn-secondary" 
-                                        style={{width: '100%', marginTop: '0.75rem'}}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSkip();
-                                        }}
+                                        className="btn btn-secondary"
+                                        onClick={handleSkip}
+                                        disabled={analyzing}
                                     >
                                         Continue with Generic Baseline
                                     </button>
@@ -1097,529 +624,213 @@
             );
         };
 
-        const ShadowPanel = ({ sentences }) => {
-            return (
-                <div className="shadow-overlay" aria-label="Detector risk visualization">
-                    {sentences.map((sent, idx) => {
-                        const lengths = sentences.map(s => s.split(/\s+/).length);
-                        const mean = lengths.reduce((a,b) => a+b,0) / lengths.length;
-                        const variance = lengths.reduce((acc, len) => acc + Math.pow(len - mean, 2), 0) / lengths.length;
-                        const burst = Math.sqrt(variance) / mean;
-                        
-                        let risk = 0.2;
-                        if (burst < 0.3) risk = 0.8;
-                        else if (burst < 0.5) risk = 0.5;
-                        
-                        let className = 'shadow-segment shadow-safe';
-                        let label = 'Safe';
-                        if (risk > 0.67) {
-                            className = 'shadow-segment shadow-danger';
-                            label = 'High Risk';
-                        } else if (risk > 0.33) {
-                            className = 'shadow-segment shadow-warning';
-                            label = 'Moderate';
-                        }
-                        
-                        return (
-                            <div 
-                                key={idx} 
-                                className={className} 
-                                data-tooltip={`${label} (${(risk * 100).toFixed(0)}%)`}
-                                role="img" 
-                                aria-label={`Sentence ${idx + 1}: ${label}`}
-                            />
-                        );
-                    })}
-                </div>
-            );
-        };
-
-        const Alert = ({ message, type, onClose }) => {
-            if (!message) return null;
-            const colors = {
-                warning: '#f59e0b',
-                danger: '#dc2626',
-                info: '#2563eb'
-            };
-            
-            return (
-                <div className="alert" role="alert" style={{borderLeftColor: colors[type] || colors.info}}>
-                    <button className="alert-close" onClick={onClose} aria-label="Dismiss alert">×</button>
-                    <div className="alert-header" style={{color: colors[type] || colors.info}}>
-                        {type === 'warning' && '⚠️'}
-                        {type === 'danger' && '🛑'}
-                        {type === 'info' && 'ℹ️'}
-                        Alert
-                    </div>
-                    <div>{message}</div>
-                </div>
-            );
-        };
-
+        // Main App
         const App = () => {
-            const [showConsent, setShowConsent] = useState(false);
             const [showBaseline, setShowBaseline] = useState(false);
-            const [text, setText] = useState('');
-            const [sources, setSources] = useState([]);
-            const [activeSource, setActiveSource] = useState(null);
-            const [metrics, setMetrics] = useState({
-                humanityScore: 85,
-                burstiness: 0.45,
-                ttr: 0.62,
-                perplexity: 105
-            });
-            const [sentences, setSentences] = useState([]);
-            const [stumbles, setStumbles] = useState([]);
-            const [alerts, setAlerts] = useState([]);
             const [baseline, setBaseline] = useState(null);
-            const [similarities, setSimilarities] = useState([]);
-            const [dragOver, setDragOver] = useState(false);
-            const editorRef = useRef(null);
-            const lastKeystrokeTime = useRef(Date.now());
-            const keystrokeBuffer = useRef([]);
-
+            const [alerts, setAlerts] = useState([]);
+            const [editorContent, setEditorContent] = useState('');
+            
+            // Load baseline on mount
             useEffect(() => {
-                const savedConsent = localStorage.getItem('wdp_consent');
-                const savedBaseline = localStorage.getItem('wdp_baseline');
-                
-                if (!savedConsent) setShowConsent(true);
-                else if (!savedBaseline) setShowBaseline(true);
-                else setBaseline(JSON.parse(savedBaseline));
+                const saved = localStorage.getItem('wdp_baseline');
+                if (!saved) {
+                    setShowBaseline(true);
+                } else {
+                    setBaseline(JSON.parse(saved));
+                }
             }, []);
 
-            useEffect(() => {
-                if (!text) return;
-                
-                const sents = sentenceTokenizer(text);
-                setSentences(sents);
-                
-                const burst = calculateBurstiness(sents);
-                const ttr = calculateTTR(text);
-                const perp = calculatePerplexity(text);
-                
-                let score = 100;
-                if (burst.global < 0.3) score -= 20;
-                if (ttr.mattr > 0.8) score -= 15;
-                if (perp < 80) score -= 25;
-                
-                setMetrics({
-                    humanityScore: Math.max(0, score),
-                    burstiness: burst.global,
-                    ttr: ttr.mattr,
-                    perplexity: perp
-                });
+            // Calculate metrics
+            const sentences = sentenceTokenizer(editorContent);
+            const burstiness = calculateBurstiness(sentences);
+            const diversity = calculateDiversity(editorContent);
+            const wordCount = editorContent.split(/\s+/).filter(w => w).length;
 
-                if (sources.length > 0) {
-                    const newSims = [];
-                    sources.forEach(source => {
-                        const sourceVec = textToVector(source.text, source.vocab);
-                        sents.forEach((sent, idx) => {
-                            const sentVec = textToVector(sent, source.vocab);
-                            const sim = cosineSimilarity(sentVec, sourceVec);
-                            if (sim > 0.3) {
-                                newSims.push({
-                                    sentenceIdx: idx,
-                                    sourceId: source.id,
-                                    score: sim
-                                });
-                            }
-                        });
-                    });
-                    setSimilarities(newSims);
-                }
-            }, [text, sources]);
-
-            const handleKeyDown = useCallback((e) => {
-                if (e.ctrlKey || e.metaKey || e.altKey) return;
-                
-                const now = Date.now();
-                const interval = now - lastKeystrokeTime.current;
-                lastKeystrokeTime.current = now;
-                
-                if (e.key.length === 1) {
-                    keystrokeBuffer.current.push({
-                        time: now,
-                        interval,
-                        char: e.key
-                    });
-                    
-                    if (keystrokeBuffer.current.length > 100) {
-                        keystrokeBuffer.current.shift();
-                    }
-                    
-                    if (keystrokeBuffer.current.length > 10) {
-                        const recent = keystrokeBuffer.current.slice(-10);
-                        const avgInterval = recent.reduce((a,b) => a + b.interval, 0) / 10;
-                        
-                        if (interval > avgInterval * 2 && interval > 500) {
-                            const sentIdx = sentenceTokenizer(text).length - 1;
-                            setStumbles(prev => [...prev, {
-                                sentenceIdx: sentIdx,
-                                position: text.length,
-                                duration: interval,
-                                timestamp: now
-                            }]);
-                            
-                            setTimeout(() => {
-                                setAlerts(prev => [...prev, {
-                                    id: Date.now(),
-                                    message: `You paused here (${(interval/1000).toFixed(1)}s). Detectors may flag this smooth passage as "too robotic". Consider varying sentence structure.`,
-                                    type: 'warning'
-                                }]);
-                            }, 100);
-                        }
-                    }
-                }
-            }, [text]);
-
-            const handleFileUpload = async (files) => {
-                for (const file of files) {
-                    let extractedText = '';
-                    
-                    try {
-                        if (file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-                            extractedText = await file.text();
-                        } else if (file.name.endsWith('.docx')) {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const result = await mammoth.extractRawText({arrayBuffer});
-                            extractedText = result.value;
-                        } else if (file.name.endsWith('.pdf')) {
-                            const arrayBuffer = await file.arrayBuffer();
-                            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
-                            for (let i = 1; i <= pdf.numPages; i++) {
-                                const page = await pdf.getPage(i);
-                                const content = await page.getTextContent();
-                                extractedText += content.items.map(item => item.str).join(' ') + ' ';
-                            }
-                        }
-                        
-                        const words = extractedText.toLowerCase().match(/\b\w+\b/g) || [];
-                        const vocab = [...new Set(words)].slice(0, 1000);
-                        
-                        const newSource = {
-                            id: Date.now() + Math.random(),
-                            name: file.name,
-                            text: extractedText.slice(0, 50000),
-                            vocab,
-                            sentenceCount: sentenceTokenizer(extractedText).length
-                        };
-                        
-                        setSources(prev => [...prev, newSource]);
-                    } catch (err) {
-                        console.error('Error parsing file:', err);
-                        setAlerts(prev => [...prev, {
-                            id: Date.now(),
-                            message: `Error reading ${file.name}. Please try another format.`,
-                            type: 'danger'
-                        }]);
-                    }
-                }
+            const handleBaselineComplete = (profile) => {
+                setBaseline(profile);
+                setShowBaseline(false);
+                addAlert('Baseline calibrated successfully!', 'success');
             };
 
-            const onDrop = (e) => {
-                e.preventDefault();
-                setDragOver(false);
-                handleFileUpload(Array.from(e.dataTransfer.files));
+            const addAlert = (message, type = 'info') => {
+                const id = Date.now();
+                setAlerts(prev => [...prev, { id, message, type }]);
+                setTimeout(() => {
+                    setAlerts(prev => prev.filter(a => a.id !== id));
+                }, 4000);
             };
 
-            const exportData = () => {
-                const data = {
-                    timestamp: new Date().toISOString(),
-                    text,
-                    metrics,
-                    keystrokes: keystrokeBuffer.current,
-                    stumbles,
-                    sources: sources.map(s => ({id: s.id, name: s.name})),
-                    baseline
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `writing-session-${Date.now()}.json`;
-                a.click();
+            const handleEditorChange = (e) => {
+                setEditorContent(e.target.value);
             };
 
-            const removeAlert = (id) => {
-                setAlerts(prev => prev.filter(a => a.id !== id));
-            };
-
-            if (showConsent) return <ConsentModal onComplete={() => { setShowConsent(false); setShowBaseline(true); }} />;
-            if (showBaseline) return <BaselineModal onComplete={() => setShowBaseline(false)} />;
+            // Placeholder logic
+            const showPlaceholder = editorContent.length === 0;
 
             return (
                 <div className="app-container">
-                    <a href="#main-content" className="skip-link">Skip to main content</a>
+                    {showBaseline && (
+                        <BaselineModal 
+                            onComplete={handleBaselineComplete}
+                        />
+                    )}
                     
-                    <header className="app-header">
-                        <div className="app-title">Writing Defense Platform</div>
-                        <div className="header-controls">
-                            <button className="btn" onClick={exportData} aria-label="Export session data">
-                                💾 Export
-                            </button>
-                            <button className="btn" onClick={() => setShowBaseline(true)} aria-label="Settings">
-                                ⚙️ Settings
-                            </button>
-                            <div style={{fontSize: '0.875rem', color: 'var(--text-secondary)'}}>
-                                Humanity: 
-                                <span style={{ 
-                                    marginLeft: '0.5rem', 
-                                    fontWeight: 'bold',
-                                    color: metrics.humanityScore > 70 ? 'var(--accent-success)' : 
-                                           metrics.humanityScore > 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'
-                                }}>
-                                    {metrics.humanityScore}
-                                </span>
+                    {/* Alerts */}
+                    {alerts.map(alert => (
+                        <div key={alert.id} className={`alert ${alert.type}`}>
+                            {alert.message}
+                        </div>
+                    ))}
+
+                    {/* Header */}
+                    <header className="header">
+                        <div className="logo">
+                            <div className="logo-icon">W</div>
+                            <div>
+                                <div style={{fontWeight: 700}}>Writing Defense Platform</div>
+                                <div style={{fontSize: '11px', opacity: 0.8}}>Phase 1 MVP</div>
                             </div>
+                        </div>
+                        
+                        <div 
+                            className={`status-badge ${baseline ? 'ready' : 'pending'}`}
+                            onClick={() => setShowBaseline(true)}
+                        >
+                            {baseline ? `Baseline ${(baseline.confidence * 100).toFixed(0)}%` : '⚠️ No Baseline Set'}
                         </div>
                     </header>
 
-                    <div className="main-layout" id="main-content">
-                        <aside className="sources-panel" aria-label="Source files">
-                            <div className="panel-header">
-                                <span>Source Files</span>
-                                <span style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
-                                    {sources.length} files
-                                </span>
-                            </div>
-                            
-                            <div 
-                                className={`file-upload-zone ${dragOver ? 'drag-over' : ''}`}
-                                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                                onDragLeave={() => setDragOver(false)}
-                                onDrop={onDrop}
-                                onClick={() => document.getElementById('file-input').click()}
-                                role="button"
-                                tabIndex="0"
-                                aria-label="Upload files"
-                            >
-                                <div style={{fontSize: '2rem', marginBottom: '0.5rem'}}>📄</div>
-                                <div style={{fontWeight: 500}}>Drop files here or click to upload</div>
-                                <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem'}}>
-                                    DOCX, PDF, TXT, MD
-                                </div>
-                                <input 
-                                    id="file-input" 
-                                    type="file" 
-                                    multiple 
-                                    accept=".docx,.pdf,.txt,.md" 
-                                    style={{display: 'none'}} 
-                                    onChange={(e) => handleFileUpload(Array.from(e.target.files))}
-                                    aria-hidden="true"
-                                />
-                            </div>
-
-                            <div className="source-list" role="list">
-                                {sources.map(source => (
-                                    <div 
-                                        key={source.id}
-                                        className={`source-item ${activeSource?.id === source.id ? 'active' : ''}`}
-                                        onClick={() => setActiveSource(source)}
-                                        role="listitem"
-                                        tabIndex="0"
-                                        aria-label={`${source.name}, ${source.sentenceCount} sentences`}
-                                    >
-                                        <div style={{fontWeight: 500, color: 'var(--text-primary)'}}>{source.name}</div>
-                                        <div style={{fontSize: '0.75rem', color: 'var(--text-secondary)'}}>
-                                            {source.sentenceCount} sentences
-                                        </div>
-                                        {similarities.some(s => s.sourceId === source.id) && (
-                                            <span className="source-badge" aria-label="Similarity detected">
-                                                {similarities.filter(s => s.sourceId === source.id).length}
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {activeSource ? (
-                                <div className="source-preview" role="region" aria-label="Source preview">
-                                    <div style={{
-                                        fontWeight: 600, 
-                                        marginBottom: '0.5rem', 
-                                        borderBottom: '1px solid var(--border-color)', 
-                                        paddingBottom: '0.5rem',
-                                        color: 'var(--text-primary)',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <span>Preview: {activeSource.name}</span>
-                                        <span style={{fontSize: '0.75rem', fontWeight: 'normal', color: 'var(--text-secondary)'}}>
-                                            {activeSource.text.length.toLocaleString()} chars
+                    {/* Left Sidebar */}
+                    <aside className="sidebar sidebar-left">
+                        <div className="card">
+                            <h3>Baseline Profile</h3>
+                            {baseline ? (
+                                <div>
+                                    <div className="metric">
+                                        <span>Type</span>
+                                        <span style={{fontWeight: 600, textTransform: 'capitalize'}}>
+                                            {baseline.type === 'generic' ? 'Generic L2' : 'Personal'}
                                         </span>
                                     </div>
-                                    <div style={{
-                                        whiteSpace: 'pre-wrap', 
-                                        color: 'var(--text-primary)',
-                                        background: 'transparent'
-                                    }}>
-                                        {activeSource.text.slice(0, 1000)}
-                                        {activeSource.text.length > 1000 && (
-                                            <span style={{color: 'var(--text-secondary)', fontStyle: 'italic'}}>
-                                                {'\n\n... (truncated)'}
-                                            </span>
-                                        )}
+                                    <div className="metric">
+                                        <span>Words Analyzed</span>
+                                        <span style={{fontWeight: 600}}>
+                                            {baseline.isGeneric ? 'N/A' : baseline.wordCount}
+                                        </span>
                                     </div>
+                                    <div className="metric">
+                                        <span>Confidence</span>
+                                        <span style={{fontWeight: 600, color: baseline.confidence > 0.8 ? '#16c79a' : '#f9a825'}}>
+                                            {(baseline.confidence * 100).toFixed(0)}%
+                                        </span>
+                                    </div>
+                                    <div className="metric">
+                                        <span>Burstiness</span>
+                                        <span style={{fontWeight: 600}}>{baseline.burstiness.toFixed(2)}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowBaseline(true)}
+                                        style={{
+                                            width: '100%', 
+                                            marginTop: '12px', 
+                                            padding: '8px', 
+                                            background: '#f0f0f0', 
+                                            border: 'none', 
+                                            borderRadius: '4px', 
+                                            cursor: 'pointer',
+                                            fontSize: '12px',
+                                            fontWeight: 500
+                                        }}
+                                    >
+                                        Recalibrate Baseline
+                                    </button>
                                 </div>
                             ) : (
-                                <div className="source-preview" style={{
-                                    display: 'flex', 
-                                    flexDirection: 'column',
-                                    alignItems: 'center', 
-                                    justifyContent: 'center',
-                                    color: 'var(--text-secondary)',
-                                    background: 'var(--bg-tertiary)',
-                                    textAlign: 'center',
-                                    gap: '0.5rem'
-                                }}>
-                                    <div style={{fontSize: '2rem', opacity: '0.3'}}>👁️</div>
-                                    <div style={{fontWeight: 500}}>Select a file to preview</div>
-                                    <div style={{fontSize: '0.75rem', maxWidth: '80%'}}>
-                                        Uploaded sources appear here for comparison
-                                    </div>
+                                <p style={{fontSize: '13px', color: '#666', fontStyle: 'italic'}}>
+                                    No baseline calibrated. Click "No Baseline Set" above to start.
+                                </p>
+                            )}
+                        </div>
+
+                        {baseline && (
+                            <div className="card">
+                                <h3>Voice Drift</h3>
+                                <div className="metric">
+                                    <span>Current Burstiness</span>
+                                    <span className={`metric-value ${Math.abs(burstiness - baseline.burstiness) > 2 ? 'warning' : 'success'}`} style={{fontSize: '14px'}}>
+                                        {burstiness.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{fontSize: '12px', color: '#666', marginTop: '8px'}}>
+                                    Δ {(burstiness - baseline.burstiness).toFixed(2)} from baseline
+                                </div>
+                            </div>
+                        )}
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="main-content">
+                        <div className="toolbar">
+                            <button onClick={() => document.execCommand('bold')}><b>B</b></button>
+                            <button onClick={() => document.execCommand('italic')}><i>I</i></button>
+                            <div style={{width: '1px', height: '20px', background: '#ddd', margin: '0 8px'}}></div>
+                            <span style={{fontSize: '13px', color: '#666'}}>
+                                {wordCount} words • {sentences.length} sentences
+                            </span>
+                        </div>
+                        
+                        <div className="editor-wrapper">
+                            {showPlaceholder && (
+                                <div className="editor-placeholder">
+                                    Start writing here... The Shadow system will analyze your text in real-time as you type.
                                 </div>
                             )}
-                        </aside>
+                            <textarea
+                                className="editor-content"
+                                value={editorContent}
+                                onChange={handleEditorChange}
+                                spellCheck={false}
+                            />
+                        </div>
+                    </main>
 
-                        <main className="editor-panel" role="main">
-                            <div className="editor-toolbar" role="toolbar" aria-label="Formatting">
-                                <button className="toolbar-btn" onClick={() => document.execCommand('bold')} aria-label="Bold"><strong>B</strong></button>
-                                <button className="toolbar-btn" onClick={() => document.execCommand('italic')} aria-label="Italic"><em>I</em></button>
-                                <button className="toolbar-btn" onClick={() => document.execCommand('underline')} aria-label="Underline"><u>U</u></button>
+                    {/* Right Sidebar */}
+                    <aside className="sidebar sidebar-right">
+                        <div className="card">
+                            <h3>Real-time Metrics</h3>
+                            <div className="metric">
+                                <span>Burstiness</span>
+                                <span className="metric-value">{burstiness.toFixed(2)}</span>
                             </div>
-                            
-                            <div className="editor-container">
-                                <ShadowPanel sentences={sentences} />
-                                
-                                {stumbles.map((stumble, idx) => (
-                                    <div 
-                                        key={idx}
-                                        className="stumble-indicator"
-                                        style={{top: `${(stumble.sentenceIdx * 40) + 100}px`}}
-                                        title={`Pause: ${(stumble.duration/1000).toFixed(1)}s`}
-                                        aria-label={`Stumble at sentence ${stumble.sentenceIdx + 1}`}
-                                    />
-                                ))}
+                            <div className="metric">
+                                <span>Lexical Diversity</span>
+                                <span className="metric-value">{diversity.toFixed(2)}</span>
+                            </div>
+                            <div className="metric">
+                                <span>Sentences</span>
+                                <span className="metric-value">{sentences.length}</span>
+                            </div>
+                        </div>
 
-                                {similarities.map((sim, idx) => (
-                                    <div 
-                                        key={`sim-${idx}`}
-                                        className="similarity-warning"
-                                        style={{
-                                            position: 'absolute',
-                                            top: `${(sim.sentenceIdx * 40) + 150}px`,
-                                            left: '2rem',
-                                            right: '2rem',
-                                            zIndex: 10
-                                        }}
-                                        role="alert"
-                                    >
-                                        <strong>⚠️ Similarity Detected:</strong> {(sim.score * 100).toFixed(0)}% match with {sources.find(s => s.id === sim.sourceId)?.name}
-                                    </div>
-                                ))}
-
-                                <div 
-                                    ref={editorRef}
-                                    className="editor-content"
-                                    contentEditable
-                                    onInput={(e) => setText(e.currentTarget.innerText)}
-                                    onKeyDown={handleKeyDown}
-                                    role="textbox"
-                                    aria-multiline="true"
-                                    aria-label="Text editor"
-                                    suppressContentEditableWarning={true}
-                                >
-                                    <p>Start writing your essay here...</p>
+                        <div className="card">
+                            <h3>Shadow System</h3>
+                            <div style={{padding: '12px', background: '#f5f5f5', borderRadius: '6px', marginTop: '8px'}}>
+                                <div style={{fontSize: '12px', color: '#666', marginBottom: '8px'}}>AI Detection Risk</div>
+                                <div style={{fontSize: '24px', fontWeight: '700', color: burstiness < 2 ? '#e94560' : '#16c79a'}}>
+                                    {burstiness < 2 ? 'HIGH' : burstiness > 8 ? 'LOW' : 'MODERATE'}
+                                </div>
+                                <div style={{fontSize: '11px', color: '#999', marginTop: '4px'}}>
+                                    Based on sentence variance
                                 </div>
                             </div>
-                        </main>
-
-                        <aside className="metrics-panel" aria-label="Writing metrics">
-                            <div className="panel-header">Analysis</div>
-                            
-                            <div className="metric-card">
-                                <div className="metric-title">Humanity Score</div>
-                                <div className="metric-value" style={{
-                                    color: metrics.humanityScore > 70 ? 'var(--accent-success)' : 
-                                           metrics.humanityScore > 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'
-                                }}>
-                                    {metrics.humanityScore}
-                                </div>
-                                <div className="progress-bar">
-                                    <div 
-                                        className="progress-fill" 
-                                        style={{
-                                            width: `${metrics.humanityScore}%`,
-                                            backgroundColor: metrics.humanityScore > 70 ? 'var(--accent-success)' : 
-                                                           metrics.humanityScore > 40 ? 'var(--accent-warning)' : 'var(--accent-danger)'
-                                        }}
-                                    />
-                                </div>
-                                <div className="metric-subtext">
-                                    {metrics.humanityScore > 70 ? 'Likely human writing' : 
-                                     metrics.humanityScore > 40 ? 'Mixed signals - review' : 'High AI similarity risk'}
-                                </div>
-                            </div>
-
-                            <div className="metric-card">
-                                <div className="metric-title">Burstiness</div>
-                                <div className="metric-value" style={{fontSize: '1.5rem'}}>
-                                    {metrics.burstiness.toFixed(2)}
-                                </div>
-                                <div className="metric-subtext">
-                                    Sentence variance
-                                    {metrics.burstiness < 0.3 && (
-                                        <span style={{color: 'var(--accent-warning)', display: 'block', marginTop: '0.5rem'}}>
-                                            ⚠️ Low variance: Add varied sentence lengths
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="metric-card">
-                                <div className="metric-title">Lexical Diversity</div>
-                                <div className="metric-value" style={{fontSize: '1.5rem'}}>
-                                    {metrics.ttr.toFixed(2)}
-                                </div>
-                                <div className="metric-subtext">
-                                    MATTR (50-word windows)
-                                </div>
-                            </div>
-
-                            <div className="metric-card">
-                                <div className="metric-title">Perplexity</div>
-                                <div className="metric-value" style={{fontSize: '1.5rem'}}>
-                                    {metrics.perplexity.toFixed(0)}
-                                </div>
-                                <div className="metric-subtext">
-                                    Predictability score
-                                </div>
-                            </div>
-
-                            <div className="metric-card" style={{fontSize: '0.875rem'}}>
-                                <div className="metric-title">Session Stats</div>
-                                <div style={{marginBottom: '0.25rem'}}>Sentences: {sentences.length}</div>
-                                <div style={{marginBottom: '0.25rem'}}>Words: {text.split(/\s+/).filter(w => w).length}</div>
-                                <div style={{marginBottom: '0.25rem'}}>Stumbles: {stumbles.length}</div>
-                                <div>Sources: {sources.length}</div>
-                            </div>
-                        </aside>
-                    </div>
-
-                    {alerts.map(alert => (
-                        <Alert 
-                            key={alert.id} 
-                            message={alert.message} 
-                            type={alert.type} 
-                            onClose={() => removeAlert(alert.id)}
-                        />
-                    ))}
+                        </div>
+                    </aside>
                 </div>
             );
         };
 
+        // Render
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
